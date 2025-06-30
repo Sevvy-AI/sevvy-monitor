@@ -1,8 +1,10 @@
+# Non-prod AWS deployment workflow - separate prod deployment exists
 name: Node.js
 
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 env:
   NODE_VERSION: "18"
@@ -64,9 +66,9 @@ jobs:
   deploy:
     name: Deploy Lambda
     runs-on: ubuntu-latest
-    needs: build
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
     steps:
+      # Non-prod AWS credentials and Lambda function
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
