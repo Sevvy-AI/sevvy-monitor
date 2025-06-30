@@ -1,4 +1,3 @@
-# Non-prod AWS deployment workflow - separate prod deployment exists
 name: Node.js
 
 on:
@@ -63,16 +62,16 @@ jobs:
           name: lambda-deployment
           path: deployment.zip
 
-  deploy:
-    name: Deploy Lambda
+  non-prod-deploy:
+    name: Non-Prod Deploy
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+    needs: build
+    if: github.event_name == 'workflow_dispatch'
     steps:
-      # Non-prod AWS credentials and Lambda function
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::381492317227:role/lambda-full-access-execution-role
+          role-to-assume: arn:aws:iam::454953019043:role/lambda-full-access-execution-role
           aws-region: us-east-1
           audience: sts.amazonaws.com
 
@@ -85,4 +84,28 @@ jobs:
         run: |
           aws lambda update-function-code \
             --function-name sevvy-monitor-cloudwatch \
+            --zip-file fileb://deployment.zip
+
+  prod-deploy:
+    name: Prod Deploy
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::390240928083:role/lambda-full-access-execution-role
+          aws-region: us-east-1
+          audience: sts.amazonaws.com
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: lambda-deployment
+
+      - name: Deploy Lambda Function
+        run: |
+          aws lambda update-function-code \
+            --function-name sevvy-monitor-cloudwatch-prod \
             --zip-file fileb://deployment.zip
