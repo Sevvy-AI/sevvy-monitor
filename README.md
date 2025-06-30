@@ -46,6 +46,7 @@ src/
 - Node.js 18+ 
 - npm
 - AWS CLI configured (for deployment)
+- GitHub CLI (for repository management)
 
 ### Installation
 
