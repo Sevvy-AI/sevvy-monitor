@@ -2,6 +2,7 @@ name: Node.js
 
 on:
   push:
+    branches: ["main"]
   pull_request:
 
 env:
@@ -65,8 +66,9 @@ jobs:
     name: Deploy to Non-Prod
     runs-on: ubuntu-latest
     needs: build
+    if: github.event_name == 'pull_request'
     environment:
-      name: nonprod
+      name: nonprod # yamllint disable-line rule:truthy
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -92,7 +94,7 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main'
     environment:
-      name: prod
+      name: prod # yamllint disable-line rule:truthy
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4

@@ -55,6 +55,6 @@ export default [
     },
   },
   {
-    ignores: ["dist/**", "node_modules/**", "tests/**"],
+    ignores: ["dist/**", "node_modules/**", "tests/**", ".github/**"],
   },
 ];
