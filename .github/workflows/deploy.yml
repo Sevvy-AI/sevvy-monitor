@@ -2,9 +2,7 @@ name: Node.js
 
 on:
   push:
-    branches: ["main"]
   pull_request:
-    branches: ["main"]
 
 env:
   NODE_VERSION: "18"
@@ -34,7 +32,7 @@ jobs:
         run: npm run lint
 
       - name: Run Tests
-        run: npm test
+        run: npm run test
 
   build:
     name: Build Lambda
