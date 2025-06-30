@@ -1,14 +1,14 @@
 import {
   FilterLogEventsCommand,
   FilterLogEventsCommandInput,
-} from '@aws-sdk/client-cloudwatch-logs';
-import { subMinutes } from 'date-fns';
-import type { LogEvent, AssumedCredentials } from '../../types/index.js';
+} from "@aws-sdk/client-cloudwatch-logs";
+import { subMinutes } from "date-fns";
+import type { LogEvent } from "../../types/index.js";
 import {
   assumeRole,
   createAssumedRoleCloudWatchLogsClient,
   createCloudWatchLogsClient,
-} from '../../shared/aws-utils.js';
+} from "./utils.js";
 
 export interface LogFetchOptions {
   logGroupName: string;
@@ -29,20 +29,19 @@ export async function fetchCloudWatchLogs(
     endTime,
     roleArn,
     externalId,
-    region = 'us-east-1',
+    region = "us-east-1",
     intervalMinutes = 1,
   } = options;
 
-  // Determine time range - default to last N minutes if not specified
   const now = Date.now();
-  const fetchStartTime = startTime || subMinutes(now, intervalMinutes).getTime();
+  const fetchStartTime =
+    startTime || subMinutes(now, intervalMinutes).getTime();
   const fetchEndTime = endTime || now;
 
   console.log(
     `Fetching logs from ${logGroupName} for time range: ${new Date(fetchStartTime).toISOString()} to ${new Date(fetchEndTime).toISOString()}`
   );
 
-  // Create CloudWatch Logs client - with or without role assumption
   let logsClient;
   if (roleArn) {
     console.log(`Assuming role: ${roleArn}`);
@@ -56,7 +55,7 @@ export async function fetchCloudWatchLogs(
     logGroupName,
     startTime: fetchStartTime,
     endTime: fetchEndTime,
-    limit: 1000, // Max events per request
+    limit: 1000,
   };
 
   const events: LogEvent[] = [];
@@ -74,8 +73,7 @@ export async function fetchCloudWatchLogs(
       if (response.events) {
         const logEvents = response.events.map(event => ({
           timestamp: event.timestamp || 0,
-          message: event.message || '',
-          logStreamName: event.logStreamName,
+          message: event.message || "",
         }));
 
         events.push(...logEvents);
@@ -89,18 +87,16 @@ export async function fetchCloudWatchLogs(
   } catch (error) {
     console.error(`Error fetching logs from ${logGroupName}:`, error);
     throw new Error(
-      `Failed to fetch CloudWatch logs: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Failed to fetch CloudWatch logs: ${error instanceof Error ? error.message : "Unknown error"}`
     );
   }
 }
 
-// Stubbed function for tracking last read time - to be implemented later
 export function getLastReadTime(
   logGroupName: string,
   awsAccountId: string
 ): number {
-  // TODO: Implement persistent storage (DynamoDB, Parameter Store, etc.)
-  // For now, return 1 minute ago as a simple time-based approach
+  // TODO: implement persistent storage (DynamoDB, Parameter Store, etc.)
   console.log(
     `[STUB] Getting last read time for ${logGroupName} in account ${awsAccountId}`
   );
@@ -112,7 +108,7 @@ export function updateLastReadTime(
   awsAccountId: string,
   timestamp: number
 ): void {
-  // TODO: Implement persistent storage
+  // TODO: implement persistent storage
   console.log(
     `[STUB] Updating last read time for ${logGroupName} in account ${awsAccountId} to ${new Date(timestamp).toISOString()}`
   );

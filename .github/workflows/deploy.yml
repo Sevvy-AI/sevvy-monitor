@@ -2,12 +2,12 @@ name: Node.js
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: "18"
 
 permissions:
   id-token: write
@@ -25,7 +25,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install Dependencies
         run: npm ci
@@ -48,7 +48,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install Dependencies
         run: npm ci
