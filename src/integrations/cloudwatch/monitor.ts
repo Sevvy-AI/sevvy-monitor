@@ -24,10 +24,10 @@ export async function monitorCloudWatchLogs(
     intervalMinutes = 1,
   } = options;
 
-  const { logGroupName, awsAccountId, roleArn } = event;
+  const { logGroupName, awsAccountNumber, roleArn, externalId } = event;
 
   console.log(
-    `Starting CloudWatch monitoring for ${logGroupName} in account ${awsAccountId}`
+    `Starting CloudWatch monitoring for ${logGroupName} in account ${awsAccountNumber}`
   );
 
   try {
@@ -35,7 +35,7 @@ export async function monitorCloudWatchLogs(
     const endTime = event.endTime || Date.now();
 
     if (useLastReadTime && !startTime) {
-      startTime = getLastReadTime(logGroupName, awsAccountId);
+      startTime = getLastReadTime(logGroupName, awsAccountNumber);
       console.log(`Using last read time: ${new Date(startTime).toISOString()}`);
     } else if (!startTime) {
       startTime = endTime - intervalMinutes * 60 * 1000;
@@ -46,9 +46,10 @@ export async function monitorCloudWatchLogs(
 
     const logs = await fetchCloudWatchLogs({
       logGroupName,
+      roleArn,
+      externalId,
       startTime,
       endTime,
-      roleArn,
       region,
       intervalMinutes,
     });
@@ -58,7 +59,7 @@ export async function monitorCloudWatchLogs(
     // TODO: update last read time if using persistent tracking
     if (useLastReadTime && logs.length > 0) {
       const latestTimestamp = Math.max(...logs.map(log => log.timestamp));
-      updateLastReadTime(logGroupName, awsAccountId, latestTimestamp);
+      updateLastReadTime(logGroupName, awsAccountNumber, latestTimestamp);
     }
 
     console.log(
@@ -67,9 +68,11 @@ export async function monitorCloudWatchLogs(
 
     const result: MonitoringResult = {
       providerCode: "aws",
-      resourceIdentifier: logGroupName,
+      orgId: event.orgId,
+      groupId: event.groupId,
+      resourceId: event.resourceId,
       metadata: {
-        awsAccountId,
+        awsAccountNumber,
         logGroupName,
       },
       timeRange: {
@@ -90,9 +93,11 @@ export async function monitorCloudWatchLogs(
 
     return {
       providerCode: "aws",
-      resourceIdentifier: logGroupName,
+      orgId: event.orgId,
+      groupId: event.groupId,
+      resourceId: event.resourceId,
       metadata: {
-        awsAccountId,
+        awsAccountNumber,
         logGroupName,
       },
       timeRange: {

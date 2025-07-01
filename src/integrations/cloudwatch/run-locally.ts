@@ -1,11 +1,16 @@
+import "dotenv/config";
 import { handler } from "../../handlers/cloudwatch.js";
 import type { MonitoringEvent } from "../../types/index.js";
 
 async function main() {
   const event: MonitoringEvent = {
-    logGroupName: "/aws/lambda/your-function-name",
-    awsAccountId: "123456789012",
-    roleArn: "arn:aws:iam::123456789012:role/YourMonitoringRole",
+    logGroupName: "/aws/elasticbeanstalk/sevvy-test-dev/var/log/web.stdout.log",
+    awsAccountNumber: "663297832605",
+    roleArn: "arn:aws:iam::663297832605:role/SevvyMonitoring",
+    externalId: "sevvy-663297832605",
+    orgId: "org_2yszKYUZTsEz8vzbt7MOVbnxZFX",
+    groupId: "2d77eca9-be64-4989-a7b0-4be348a1b58b",
+    resourceId: "81759306-28fc-4911-b021-e9553d9fecd4",
   };
 
   console.log("Starting CloudWatch monitoring with event:");

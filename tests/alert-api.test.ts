@@ -5,9 +5,11 @@ import type { MonitoringResult } from "../src/types/index.js";
 describe("Alert API", () => {
   const mockResult: MonitoringResult = {
     providerCode: "aws",
-    resourceIdentifier: "/aws/lambda/test-function",
+    orgId: "org_2yszKYUZTsEz8vzbt7MOVbnxZFX",
+    groupId: "2d77eca9-be64-4989-a7b0-4be348a1b58b",
+    resourceId: "81759306-28fc-4911-b021-e9553d9fecd4",
     metadata: {
-      awsAccountId: "123456789012",
+      awsAccountNumber: "663297832605",
       region: "us-east-1",
     },
     timeRange: {
@@ -26,8 +28,6 @@ describe("Alert API", () => {
     it("should create client with custom config", () => {
       const client = new AlertApiClient({
         apiUrl: "https://custom-api.com/alerts",
-        apiKey: "test-key",
-        timeout: 5000,
       });
       expect(client).toBeDefined();
     });

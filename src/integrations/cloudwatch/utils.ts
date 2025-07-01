@@ -4,10 +4,21 @@ import type { AssumedCredentials, MonitoringEvent } from "../../types/index.js";
 
 export async function assumeRole(
   roleArn: string,
-  externalId?: string
+  externalId: string
 ): Promise<AssumedCredentials> {
+  const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+
+  if (!accessKeyId || !secretAccessKey) {
+    throw new Error("AWS credentials not found in environment variables");
+  }
+
   const stsClient = new STSClient({
     region: process.env.AWS_REGION || "us-east-1",
+    credentials: {
+      accessKeyId,
+      secretAccessKey,
+    },
   });
 
   const command = new AssumeRoleCommand({
@@ -62,12 +73,24 @@ export function validateMonitoringEvent(event: MonitoringEvent): string | null {
     return "logGroupName is required";
   }
 
-  if (!event.awsAccountId) {
-    return "awsAccountId is required";
+  if (!event.awsAccountNumber) {
+    return "awsAccountNumber is required";
   }
 
   if (!event.roleArn) {
     return "roleArn is required";
+  }
+
+  if (!event.orgId) {
+    return "orgId is required";
+  }
+
+  if (!event.groupId) {
+    return "groupId is required";
+  }
+
+  if (!event.resourceId) {
+    return "resourceId is required";
   }
 
   const roleArnPattern = /^arn:aws:iam::\d{12}:role\/[\w+=,.@-]+$/;
@@ -75,8 +98,8 @@ export function validateMonitoringEvent(event: MonitoringEvent): string | null {
     return "roleArn must be a valid IAM role ARN";
   }
 
-  if (!/^\d{12}$/.test(event.awsAccountId)) {
-    return "awsAccountId must be a 12-digit AWS account ID";
+  if (!/^\d{12}$/.test(event.awsAccountNumber)) {
+    return "awsAccountNumber must be a 12-digit AWS account ID";
   }
 
   return null;

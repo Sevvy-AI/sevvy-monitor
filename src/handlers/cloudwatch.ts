@@ -63,9 +63,12 @@ export const handler = async (
       } else {
         return {
           providerCode: "aws",
-          resourceIdentifier: monitoringEvent.logGroupName || "unknown",
+          orgId: monitoringEvent.orgId || "unknown",
+          groupId: monitoringEvent.groupId || "unknown",
+          resourceId: monitoringEvent.resourceId || "unknown",
           metadata: {
-            awsAccountId: monitoringEvent.awsAccountId || "unknown",
+            awsAccountNumber: monitoringEvent.awsAccountNumber || "unknown",
+            logGroupName: monitoringEvent.logGroupName || "unknown",
           },
           timeRange: {
             startTime: Date.now() - 60000,
@@ -77,7 +80,7 @@ export const handler = async (
     }
 
     console.log(
-      `Starting error detection for AWS account: ${monitoringEvent.awsAccountId} and log group: ${monitoringEvent.logGroupName}`
+      `Starting error detection for AWS account: ${monitoringEvent.awsAccountNumber} and log group: ${monitoringEvent.logGroupName}`
     );
     const result = await monitorCloudWatchLogs(monitoringEvent, {
       useLastReadTime: false, // TODO: implement persistent storage
@@ -88,7 +91,7 @@ export const handler = async (
     if (result.hasError) {
       console.log(
         "Error found! Sending alert for AWS account: " +
-          monitoringEvent.awsAccountId +
+          monitoringEvent.awsAccountNumber +
           " and log group: " +
           monitoringEvent.logGroupName
       );
@@ -133,9 +136,12 @@ export const handler = async (
     } else {
       return {
         providerCode: "aws",
-        resourceIdentifier: "unknown",
+        orgId: "unknown",
+        groupId: "unknown",
+        resourceId: "unknown",
         metadata: {
-          awsAccountId: "unknown",
+          awsAccountNumber: "unknown",
+          logGroupName: "unknown",
         },
         timeRange: {
           startTime: Date.now() - 60000,

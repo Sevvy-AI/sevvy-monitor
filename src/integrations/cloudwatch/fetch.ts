@@ -12,10 +12,10 @@ import {
 
 export interface LogFetchOptions {
   logGroupName: string;
+  roleArn: string;
+  externalId: string;
   startTime?: number;
   endTime?: number;
-  roleArn?: string;
-  externalId?: string;
   region?: string;
   intervalMinutes?: number;
 }
@@ -44,7 +44,6 @@ export async function fetchCloudWatchLogs(
 
   let logsClient;
   if (roleArn) {
-    console.log(`Assuming role: ${roleArn}`);
     const credentials = await assumeRole(roleArn, externalId);
     logsClient = createAssumedRoleCloudWatchLogsClient(credentials, region);
   } else {
