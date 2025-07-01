@@ -7,7 +7,7 @@
   "scripts": {
     "build": "rm -rf dist && tsc",
     "build:lambda": "npm run build && npm run bundle && npm run package",
-    "bundle": "esbuild src/handlers/cloudwatch.ts --bundle --platform=node --target=node18 --outfile=dist/handlers/cloudwatch.js --format=cjs --external:@aws-sdk/* --minify --sourcemap",
+    "bundle": "esbuild src/handlers/cloudwatch.ts --bundle --platform=node --target=node18 --outfile=dist/cloudwatch.js --format=cjs --external:@aws-sdk/* --minify --sourcemap --alias:@=src",
     "package": "cd dist && zip -r ../deployment.zip . -x '*.map'",
     "dev": "tsx watch src/handlers/cloudwatch.ts",
     "run:cloudwatch": "tsx src/integrations/cloudwatch/run-locally.ts",
@@ -15,9 +15,7 @@
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format:fix": "prettier --write . --log-level warn",
-    "lint:format:fix": "npm run lint:fix && npm run format:fix",
-    "deploy:dev": "npm run build:lambda && aws lambda update-function-code --function-name sevvy-monitor-cloudwatch-dev --zip-file fileb://deployment.zip",
-    "deploy:prod": "npm run build:lambda && aws lambda update-function-code --function-name sevvy-monitor-cloudwatch-prod --zip-file fileb://deployment.zip"
+    "lint:format:fix": "npm run lint:fix && npm run format:fix"
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch-logs": "^3.821.0",

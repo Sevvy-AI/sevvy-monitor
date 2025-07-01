@@ -91,13 +91,16 @@ jobs:
             aws lambda update-function-code \
               --function-name $FUNCTION_NAME \
               --zip-file fileb://deployment.zip
+            aws lambda update-function-configuration \
+              --function-name $FUNCTION_NAME \
+              --handler cloudwatch.handler
           else
             echo "Function does not exist, creating new function..."
             aws lambda create-function \
               --function-name $FUNCTION_NAME \
               --runtime nodejs18.x \
               --role arn:aws:iam::454953019043:role/MonitoringLambdaExecutionRole \
-              --handler src/handlers/cloudwatch.handler \
+              --handler cloudwatch.handler \
               --zip-file fileb://deployment.zip \
               --timeout 300 \
               --memory-size 512 \
@@ -133,13 +136,16 @@ jobs:
             aws lambda update-function-code \
               --function-name $FUNCTION_NAME \
               --zip-file fileb://deployment.zip
+            aws lambda update-function-configuration \
+              --function-name $FUNCTION_NAME \
+              --handler cloudwatch.handler
           else
             echo "Function does not exist, creating new function..."
             aws lambda create-function \
               --function-name $FUNCTION_NAME \
               --runtime nodejs18.x \
               --role arn:aws:iam::390240928083:role/MonitoringLambdaExecutionRole \
-              --handler src/handlers/cloudwatch.handler \
+              --handler cloudwatch.handler \
               --zip-file fileb://deployment.zip \
               --timeout 300 \
               --memory-size 512 \
