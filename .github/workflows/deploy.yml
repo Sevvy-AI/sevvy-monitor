@@ -84,9 +84,25 @@ jobs:
 
       - name: Deploy Lambda Function
         run: |
-          aws lambda update-function-code \
-            --function-name sevvy-monitor-cloudwatch-dev \
-            --zip-file fileb://deployment.zip
+          FUNCTION_NAME="sevvy-monitor-cloudwatch-dev"
+
+          if aws lambda get-function --function-name $FUNCTION_NAME >/dev/null 2>&1; then
+            echo "Function exists, updating code..."
+            aws lambda update-function-code \
+              --function-name $FUNCTION_NAME \
+              --zip-file fileb://deployment.zip
+          else
+            echo "Function does not exist, creating new function..."
+            aws lambda create-function \
+              --function-name $FUNCTION_NAME \
+              --runtime nodejs18.x \
+              --role arn:aws:iam::454953019043:role/MonitoringLambdaExecutionRole \
+              --handler src/handlers/cloudwatch.handler \
+              --zip-file fileb://deployment.zip \
+              --timeout 300 \
+              --memory-size 512 \
+              --description "Sevvy CloudWatch monitoring function for dev environment"
+          fi
 
   deploy_prod:
     name: Deploy to Prod
@@ -110,6 +126,22 @@ jobs:
 
       - name: Deploy Lambda Function
         run: |
-          aws lambda update-function-code \
-            --function-name sevvy-monitor-cloudwatch-prod \
-            --zip-file fileb://deployment.zip
+          FUNCTION_NAME="sevvy-monitor-cloudwatch-prod"
+
+          if aws lambda get-function --function-name $FUNCTION_NAME >/dev/null 2>&1; then
+            echo "Function exists, updating code..."
+            aws lambda update-function-code \
+              --function-name $FUNCTION_NAME \
+              --zip-file fileb://deployment.zip
+          else
+            echo "Function does not exist, creating new function..."
+            aws lambda create-function \
+              --function-name $FUNCTION_NAME \
+              --runtime nodejs18.x \
+              --role arn:aws:iam::390240928083:role/MonitoringLambdaExecutionRole \
+              --handler src/handlers/cloudwatch.handler \
+              --zip-file fileb://deployment.zip \
+              --timeout 300 \
+              --memory-size 512 \
+              --description "Sevvy CloudWatch monitoring function for prod environment"
+          fi
