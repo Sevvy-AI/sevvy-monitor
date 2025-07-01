@@ -1,0 +1,91 @@
+# Quick Fix for .github/workflows/deploy.yml
+# Replace the Deploy Lambda Function step with this improved version
+
+- name: Deploy Lambda Function
+  run: |
+    FUNCTION_NAME="sevvy-monitor-cloudwatch-dev"
+
+    # Function to wait for Active state
+    wait_for_function_active() {
+      local func_name=$1
+      local max_attempts=30
+      local attempt=0
+      
+      echo "Waiting for function $func_name to become Active..."
+      while [ $attempt -lt $max_attempts ]; do
+        state=$(aws lambda get-function --function-name $func_name --query 'Configuration.State' --output text 2>/dev/null)
+        last_update_status=$(aws lambda get-function --function-name $func_name --query 'Configuration.LastUpdateStatus' --output text 2>/dev/null)
+        
+        echo "Function state: $state, Last update status: $last_update_status"
+        
+        if [ "$state" = "Active" ] && [ "$last_update_status" = "Successful" ]; then
+          echo "Function is Active and last update was Successful"
+          return 0
+        fi
+        
+        if [ "$last_update_status" = "Failed" ]; then
+          echo "Last update failed. Exiting..."
+          return 1
+        fi
+        
+        echo "Function not ready yet. Waiting 10 seconds..."
+        sleep 10
+        attempt=$((attempt + 1))
+      done
+      
+      echo "Function did not become Active within expected time (5 minutes)"
+      return 1
+    }
+
+    # Check if function exists and get current state
+    if aws lambda get-function --function-name $FUNCTION_NAME >/dev/null 2>&1; then
+      echo "Function exists, checking current state..."
+      
+      # Check current state before starting
+      current_state=$(aws lambda get-function --function-name $FUNCTION_NAME --query 'Configuration.State' --output text)
+      echo "Current function state: $current_state"
+      
+      # If function is not Active, wait for it first
+      if [ "$current_state" != "Active" ]; then
+        echo "Function is not Active, waiting for it to become Active..."
+        wait_for_function_active $FUNCTION_NAME
+      fi
+      
+      echo "Updating function code..."
+      aws lambda update-function-code \
+        --function-name $FUNCTION_NAME \
+        --zip-file fileb://deployment.zip
+      
+      # Wait for function to be Active after code update
+      echo "Waiting for function to be Active after code update..."
+      wait_for_function_active $FUNCTION_NAME
+      
+      echo "Updating function configuration..."
+      aws lambda update-function-configuration \
+        --function-name $FUNCTION_NAME \
+        --handler cloudwatch.handler
+      
+      # Wait for function to be Active after configuration update
+      echo "Waiting for function to be Active after configuration update..."
+      wait_for_function_active $FUNCTION_NAME
+      
+      echo "Lambda function deployment completed successfully!"
+      
+    else
+      echo "Function does not exist, creating new function..."
+      aws lambda create-function \
+        --function-name $FUNCTION_NAME \
+        --runtime nodejs18.x \
+        --role arn:aws:iam::454953019043:role/MonitoringLambdaExecutionRole \
+        --handler cloudwatch.handler \
+        --zip-file fileb://deployment.zip \
+        --timeout 300 \
+        --memory-size 512 \
+        --description "Sevvy CloudWatch monitoring function for dev environment"
+      
+      # Wait for new function to be Active
+      echo "Waiting for new function to be Active..."
+      wait_for_function_active $FUNCTION_NAME
+      
+      echo "Lambda function created successfully!"
+    fi
