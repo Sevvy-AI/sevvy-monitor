@@ -15,6 +15,11 @@ export class AlertApiClient {
   }
 
   async sendAlert(payload: MonitoringResult): Promise<boolean> {
+    if (!payload.hasError) {
+      console.log("No errors detected, not sending alert.");
+      return true;
+    }
+
     console.log("AlertApiClient.sendAlert called with payload:", {
       providerCode: payload.providerCode,
       orgId: payload.orgId,
@@ -25,7 +30,7 @@ export class AlertApiClient {
     });
 
     try {
-      const apiUrl = `${process.env.SEVVY_SERVER_BASE_URL}/api/handleError`;
+      const apiUrl = `${this.apiUrl}/api/handleError`;
       console.log("Sending alert to:", apiUrl);
 
       const alertPayload: Omit<MonitoringResult, "hasError"> = {

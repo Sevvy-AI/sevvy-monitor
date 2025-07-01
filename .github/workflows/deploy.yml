@@ -73,7 +73,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::454953019043:role/lambda-full-access-execution-role
+          role-to-assume: arn:aws:iam::454953019043:role/MonitoringLambdaDeploymentRole
           aws-region: us-east-1
           audience: sts.amazonaws.com
 
@@ -85,7 +85,7 @@ jobs:
       - name: Deploy Lambda Function
         run: |
           aws lambda update-function-code \
-            --function-name sevvy-monitor-cloudwatch \
+            --function-name sevvy-monitor-cloudwatch-dev \
             --zip-file fileb://deployment.zip
 
   deploy_prod:
@@ -99,7 +99,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::390240928083:role/lambda-full-access-execution-role
+          role-to-assume: arn:aws:iam::390240928083:role/MonitoringLambdaDeploymentRole
           aws-region: us-east-1
           audience: sts.amazonaws.com
 

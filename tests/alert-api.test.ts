@@ -1,6 +1,13 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import { AlertApiClient } from "../src/shared/send-alert.js";
 import type { MonitoringResult } from "../src/types/index.js";
+import { fetchWithTimeout } from "../src/shared/utils.js";
+
+vi.mock("../src/shared/utils.js", () => ({
+  fetchWithTimeout: vi.fn(),
+}));
+
+const mockedFetchWithTimeout = fetchWithTimeout as Mock;
 
 describe("Alert API", () => {
   const mockResult: MonitoringResult = {
@@ -19,6 +26,10 @@ describe("Alert API", () => {
     hasError: true,
   };
 
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("AlertApiClient", () => {
     it("should create client with default config", () => {
       const client = new AlertApiClient();
@@ -32,20 +43,27 @@ describe("Alert API", () => {
       expect(client).toBeDefined();
     });
 
-    it("should send alert successfully (stubbed)", async () => {
-      const client = new AlertApiClient();
+    it("should send alert successfully", async () => {
+      mockedFetchWithTimeout.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ success: true }),
+      });
+      const client = new AlertApiClient({ apiUrl: "http://test-api.com" });
       const result = await client.sendAlert(mockResult);
       expect(result).toBe(true);
+      expect(fetchWithTimeout).toHaveBeenCalledTimes(1);
     });
 
-    it("should send alert from monitoring result", async () => {
-      const client = new AlertApiClient();
+    it("should return false if alert sending fails", async () => {
+      mockedFetchWithTimeout.mockRejectedValue(new Error("Network error"));
+      const client = new AlertApiClient({ apiUrl: "http://test-api.com" });
       const result = await client.sendAlert(mockResult);
-      expect(result).toBe(true);
+      expect(result).toBe(false);
+      expect(fetchWithTimeout).toHaveBeenCalledTimes(1);
     });
 
     it("should not send alert for successful result with no errors", async () => {
-      const client = new AlertApiClient();
+      const client = new AlertApiClient({ apiUrl: "http://test-api.com" });
       const resultWithNoErrors: MonitoringResult = {
         ...mockResult,
         hasError: false,
@@ -53,6 +71,7 @@ describe("Alert API", () => {
 
       const result = await client.sendAlert(resultWithNoErrors);
       expect(result).toBe(true);
+      expect(fetchWithTimeout).not.toHaveBeenCalled();
     });
   });
 });
