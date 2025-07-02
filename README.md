@@ -43,9 +43,10 @@ src/
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm
 - AWS CLI configured (for deployment)
+- GitHub CLI (for repository management)
 
 ### Installation
 
@@ -79,7 +80,7 @@ npm run build:lambda
 # Deploy to development environment
 npm run deploy:dev
 
-# Deploy to production environment  
+# Deploy to production environment
 npm run deploy:prod
 ```
 
@@ -92,7 +93,7 @@ The CloudWatch Lambda function accepts the following parameters:
 ```typescript
 {
   "logGroupName": "/aws/lambda/my-function",
-  "awsAccountId": "123456789012", 
+  "awsAccountId": "123456789012",
   "roleArn": "arn:aws:iam::123456789012:role/LogMonitoringRole",
   "intervalMinutes": 1,          // Optional: defaults to 1
   "startTime": 1640995200000,    // Optional: Unix timestamp
@@ -135,11 +136,12 @@ The current implementation uses a simple time-based approach for tracking the la
 # Run all tests
 npm test
 
-# Run tests in watch mode  
+# Run tests in watch mode
 npm run test:watch
 ```
 
 Tests cover:
+
 - Error pattern matching
 - Error detection logic
 - Alert API functionality
@@ -150,18 +152,21 @@ Tests cover:
 ### AWS Lambda Configuration
 
 Recommended Lambda settings:
+
 - **Runtime**: Node.js 18
 - **Memory**: 256 MB
-- **Timeout**: 30 seconds  
+- **Timeout**: 30 seconds
 - **Architecture**: x86_64
 
 ### IAM Permissions
 
 The Lambda function needs:
+
 - `sts:AssumeRole` - For cross-account access
 - `logs:FilterLogEvents` - For reading CloudWatch logs
 
 The assumed role in target accounts needs:
+
 - `logs:FilterLogEvents` - For the specific log groups
 - `logs:DescribeLogGroups` - For log group metadata
 

@@ -1,98 +1,77 @@
-import { describe, it, expect, vi } from 'vitest';
-import { AlertApiClient, sendAlert } from '../src/shared/alert-api.js';
-import type { MonitoringResult, AlertPayload } from '../src/types/index.js';
+import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
+import { AlertApiClient } from "../src/shared/send-alert.js";
+import type { MonitoringResult } from "../src/types/index.js";
+import { fetchWithTimeout } from "../src/shared/utils.js";
 
-describe('Alert API', () => {
+vi.mock("../src/shared/utils.js", () => ({
+  fetchWithTimeout: vi.fn(),
+}));
+
+const mockedFetchWithTimeout = fetchWithTimeout as Mock;
+
+describe("Alert API", () => {
   const mockResult: MonitoringResult = {
-    logGroupName: '/aws/lambda/test-function',
-    awsAccountId: '123456789012',
+    providerCode: "aws",
+    orgId: "org_2yszKYUZTsEz8vzbt7MOVbnxZFX",
+    groupId: "2d77eca9-be64-4989-a7b0-4be348a1b58b",
+    resourceId: "81759306-28fc-4911-b021-e9553d9fecd4",
+    metadata: {
+      awsAccountNumber: "663297832605",
+      region: "us-east-1",
+    },
     timeRange: {
       startTime: 1640995200000,
       endTime: 1640995260000,
     },
-    totalEvents: 10,
-    errorMatches: [
-      {
-        pattern: 'Generic Error',
-        message: 'ERROR: Something went wrong',
-        timestamp: 1640995230000,
-        logStreamName: 'stream-1',
-        context: 'ERROR: Something went wrong',
-      },
-    ],
-    success: true,
+    hasError: true,
   };
 
-  describe('AlertApiClient', () => {
-    it('should create client with default config', () => {
-      const client = new AlertApiClient();
-      expect(client).toBeDefined();
-    });
-
-    it('should create client with custom config', () => {
-      const client = new AlertApiClient({
-        apiUrl: 'https://custom-api.com/alerts',
-        apiKey: 'test-key',
-        timeout: 5000,
-      });
-      expect(client).toBeDefined();
-    });
-
-    it('should send alert successfully (stubbed)', async () => {
-      const client = new AlertApiClient();
-      const payload: AlertPayload = {
-        logGroupName: mockResult.logGroupName,
-        awsAccountId: mockResult.awsAccountId,
-        errorMatches: mockResult.errorMatches,
-        timestamp: Date.now(),
-      };
-
-      const result = await client.sendAlert(payload);
-      expect(result).toBe(true);
-    });
-
-    it('should send alert from monitoring result', async () => {
-      const client = new AlertApiClient();
-      const result = await client.sendAlertFromMonitoringResult(mockResult);
-      expect(result).toBe(true);
-    });
-
-    it('should not send alert for successful result with no errors', async () => {
-      const client = new AlertApiClient();
-      const resultWithNoErrors: MonitoringResult = {
-        ...mockResult,
-        errorMatches: [],
-      };
-
-      const result = await client.sendAlertFromMonitoringResult(resultWithNoErrors);
-      expect(result).toBe(true); // Returns true but doesn't actually send
-    });
-
-    it('should not send alert for failed monitoring result', async () => {
-      const client = new AlertApiClient();
-      const failedResult: MonitoringResult = {
-        ...mockResult,
-        success: false,
-        error: 'Failed to fetch logs',
-      };
-
-      const result = await client.sendAlertFromMonitoringResult(failedResult);
-      expect(result).toBe(true); // Returns true but doesn't actually send
-    });
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  describe('sendAlert convenience function', () => {
-    it('should send alert using convenience function', async () => {
-      const result = await sendAlert(mockResult);
-      expect(result).toBe(true);
+  describe("AlertApiClient", () => {
+    it("should create client with default config", () => {
+      const client = new AlertApiClient();
+      expect(client).toBeDefined();
     });
 
-    it('should send alert with custom config', async () => {
-      const result = await sendAlert(mockResult, {
-        apiUrl: 'https://custom-api.com/alerts',
-        timeout: 5000,
+    it("should create client with custom config", () => {
+      const client = new AlertApiClient({
+        apiUrl: "https://custom-api.com/alerts",
       });
+      expect(client).toBeDefined();
+    });
+
+    it("should send alert successfully", async () => {
+      mockedFetchWithTimeout.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ success: true }),
+      });
+      const client = new AlertApiClient({ apiUrl: "http://test-api.com" });
+      const result = await client.sendAlert(mockResult);
       expect(result).toBe(true);
+      expect(fetchWithTimeout).toHaveBeenCalledTimes(1);
+    });
+
+    it("should return false if alert sending fails", async () => {
+      mockedFetchWithTimeout.mockRejectedValue(new Error("Network error"));
+      const client = new AlertApiClient({ apiUrl: "http://test-api.com" });
+      const result = await client.sendAlert(mockResult);
+      expect(result).toBe(false);
+      expect(fetchWithTimeout).toHaveBeenCalledTimes(1);
+    });
+
+    it("should not send alert for successful result with no errors", async () => {
+      const client = new AlertApiClient({ apiUrl: "http://test-api.com" });
+      const resultWithNoErrors: MonitoringResult = {
+        ...mockResult,
+        hasError: false,
+      };
+
+      const result = await client.sendAlert(resultWithNoErrors);
+      expect(result).toBe(true);
+      expect(fetchWithTimeout).not.toHaveBeenCalled();
     });
   });
 });
