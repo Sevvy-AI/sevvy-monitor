@@ -1,17 +1,61 @@
 import { STSClient, AssumeRoleCommand } from "@aws-sdk/client-sts";
+import {
+  SecretsManagerClient,
+  GetSecretValueCommand,
+} from "@aws-sdk/client-secrets-manager";
 import { CloudWatchLogsClient } from "@aws-sdk/client-cloudwatch-logs";
 import type { AssumedCredentials, MonitoringEvent } from "../../types/index.js";
+
+interface AwsCredentials {
+  AWS_ACCESS_KEY_ID: string;
+  AWS_SECRET_ACCESS_KEY: string;
+}
+
+let cachedCredentials: AwsCredentials | null = null;
+
+async function getAwsCredentialsFromSecretsManager(): Promise<AwsCredentials> {
+  if (cachedCredentials) {
+    return cachedCredentials;
+  }
+
+  const secretName =
+    process.env.AWS_CREDENTIALS_SECRET_NAME || "sevvy-monitor/aws-credentials";
+  const region = process.env.AWS_REGION || "us-east-1";
+
+  const secretsClient = new SecretsManagerClient({ region });
+
+  try {
+    const command = new GetSecretValueCommand({ SecretId: secretName });
+    const response = await secretsClient.send(command);
+
+    if (!response.SecretString) {
+      throw new Error("Secret value is empty");
+    }
+
+    const credentials = JSON.parse(response.SecretString) as AwsCredentials;
+
+    if (!credentials.AWS_ACCESS_KEY_ID || !credentials.AWS_SECRET_ACCESS_KEY) {
+      throw new Error("Invalid credentials format in secret");
+    }
+
+    cachedCredentials = credentials;
+    return credentials;
+  } catch (error) {
+    console.error("Error retrieving credentials from Secrets Manager:", error);
+    throw new Error(
+      `Failed to retrieve AWS credentials from Secrets Manager: ${error instanceof Error ? error.message : "Unknown error"}`
+    );
+  }
+}
 
 export async function assumeRole(
   roleArn: string,
   externalId: string
 ): Promise<AssumedCredentials> {
-  const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
-
-  if (!accessKeyId || !secretAccessKey) {
-    throw new Error("AWS credentials not found in environment variables");
-  }
+  console.log("Retrieving AWS credentials from Secrets Manager");
+  const credentials = await getAwsCredentialsFromSecretsManager();
+  const accessKeyId = credentials.AWS_ACCESS_KEY_ID;
+  const secretAccessKey = credentials.AWS_SECRET_ACCESS_KEY;
 
   const stsClient = new STSClient({
     region: process.env.AWS_REGION || "us-east-1",
