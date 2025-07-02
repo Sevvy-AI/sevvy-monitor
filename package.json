@@ -7,7 +7,7 @@
   "scripts": {
     "build": "rm -rf dist && tsc",
     "build:lambda": "npm run build && npm run bundle && npm run package",
-    "bundle": "esbuild src/handlers/cloudwatch.ts --bundle --platform=node --target=node18 --outfile=dist/cloudwatch.js --format=cjs --external:@aws-sdk/* --minify --sourcemap --alias:@=src",
+    "bundle": "esbuild src/handlers/cloudwatch.ts --bundle --platform=node --target=node20 --outfile=dist/cloudwatch.js --format=cjs --external:@aws-sdk/* --minify --sourcemap --alias:@=src",
     "package": "cd dist && zip -r ../deployment.zip . -x '*.map'",
     "dev": "tsx watch src/handlers/cloudwatch.ts",
     "run:cloudwatch": "tsx src/integrations/cloudwatch/run-locally.ts",
@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch-logs": "^3.821.0",
+    "@aws-sdk/client-secrets-manager": "^3.840.0",
     "@aws-sdk/client-sts": "^3.821.0",
     "date-fns": "^4.1.0",
     "dotenv": "^17.0.0"

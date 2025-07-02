@@ -6,7 +6,7 @@ on:
   pull_request:
 
 env:
-  NODE_VERSION: "18"
+  NODE_VERSION: "20"
 
 permissions:
   id-token: write
@@ -91,14 +91,16 @@ jobs:
             aws lambda update-function-code \
               --function-name $FUNCTION_NAME \
               --zip-file fileb://deployment.zip
+            aws lambda wait function-updated-v2 --function-name $FUNCTION_NAME
             aws lambda update-function-configuration \
               --function-name $FUNCTION_NAME \
-              --handler cloudwatch.handler
+              --handler cloudwatch.handler \
+              --runtime nodejs20.x
           else
             echo "Function does not exist, creating new function..."
             aws lambda create-function \
               --function-name $FUNCTION_NAME \
-              --runtime nodejs18.x \
+              --runtime nodejs20.x \
               --role arn:aws:iam::454953019043:role/MonitoringLambdaExecutionRole \
               --handler cloudwatch.handler \
               --zip-file fileb://deployment.zip \
@@ -136,14 +138,16 @@ jobs:
             aws lambda update-function-code \
               --function-name $FUNCTION_NAME \
               --zip-file fileb://deployment.zip
+            aws lambda wait function-updated-v2 --function-name $FUNCTION_NAME
             aws lambda update-function-configuration \
               --function-name $FUNCTION_NAME \
-              --handler cloudwatch.handler
+              --handler cloudwatch.handler \
+              --runtime nodejs20.x
           else
             echo "Function does not exist, creating new function..."
             aws lambda create-function \
               --function-name $FUNCTION_NAME \
-              --runtime nodejs18.x \
+              --runtime nodejs20.x \
               --role arn:aws:iam::390240928083:role/MonitoringLambdaExecutionRole \
               --handler cloudwatch.handler \
               --zip-file fileb://deployment.zip \
