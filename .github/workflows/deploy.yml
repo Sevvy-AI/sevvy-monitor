@@ -84,7 +84,7 @@ jobs:
 
       - name: Deploy Lambda Function
         run: |
-          FUNCTION_NAME="sevvy-monitor-cloudwatch-dev"
+          FUNCTION_NAME="sevvy-monitor-aws-dev"
 
           if aws lambda get-function --function-name $FUNCTION_NAME >/dev/null 2>&1; then
             echo "Function exists, updating code..."
@@ -131,7 +131,7 @@ jobs:
 
       - name: Deploy Lambda Function
         run: |
-          FUNCTION_NAME="sevvy-monitor-cloudwatch-prod"
+          FUNCTION_NAME="sevvy-monitor-aws-prod"
 
           if aws lambda get-function --function-name $FUNCTION_NAME >/dev/null 2>&1; then
             echo "Function exists, updating code..."
