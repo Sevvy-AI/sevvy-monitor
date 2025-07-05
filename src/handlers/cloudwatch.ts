@@ -83,7 +83,6 @@ export const handler = async (
       `Starting error detection for AWS account: ${monitoringEvent.awsAccountNumber} and log group: ${monitoringEvent.logGroupName}`
     );
     const result = await monitorCloudWatchLogs(monitoringEvent, {
-      useLastReadTime: false, // TODO: implement persistent storage
       region: process.env.AWS_REGION || "us-east-1",
       intervalMinutes: 1,
     });

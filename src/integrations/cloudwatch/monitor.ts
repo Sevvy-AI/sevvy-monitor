@@ -7,7 +7,6 @@ import {
 } from "./fetch.js";
 
 export interface CloudWatchMonitorOptions {
-  useLastReadTime?: boolean;
   customErrorPatterns?: RegExp[];
   region?: string;
   intervalMinutes?: number;
@@ -18,7 +17,6 @@ export async function monitorCloudWatchLogs(
   options: CloudWatchMonitorOptions = {}
 ): Promise<MonitoringResult> {
   const {
-    useLastReadTime = false,
     customErrorPatterns = [],
     region = "us-east-1",
     intervalMinutes = 1,
@@ -34,14 +32,9 @@ export async function monitorCloudWatchLogs(
     let startTime = event.startTime;
     const endTime = event.endTime || Date.now();
 
-    if (useLastReadTime && !startTime) {
-      startTime = getLastReadTime(logGroupName, awsAccountNumber);
+    if (!startTime) {
+      startTime = await getLastReadTime(event.orgId, event.resourceId);
       console.log(`Using last read time: ${new Date(startTime).toISOString()}`);
-    } else if (!startTime) {
-      startTime = endTime - intervalMinutes * 60 * 1000;
-      console.log(
-        `Using interval-based time range: ${intervalMinutes} minutes`
-      );
     }
 
     const logs = await fetchCloudWatchLogs({
@@ -56,11 +49,9 @@ export async function monitorCloudWatchLogs(
 
     const hasErrors = detectErrorsInLogs(logs, customErrorPatterns);
 
-    // TODO: update last read time if using persistent tracking
-    if (useLastReadTime && logs.length > 0) {
-      const latestTimestamp = Math.max(...logs.map(log => log.timestamp));
-      updateLastReadTime(logGroupName, awsAccountNumber, latestTimestamp);
-    }
+    const timestampToSave =
+      logs.length > 0 ? Math.max(...logs.map(log => log.timestamp)) : endTime;
+    await updateLastReadTime(event.orgId, event.resourceId, timestampToSave);
 
     console.log(
       `Monitoring completed: ${logs.length} events processed, ${hasErrors ? "errors" : "no errors"} found`
@@ -88,8 +79,6 @@ export async function monitorCloudWatchLogs(
       `Error monitoring CloudWatch logs for ${logGroupName}:`,
       error
     );
-
-    // TODO: update persistent storage with timestamp?
 
     return {
       providerCode: "aws",
