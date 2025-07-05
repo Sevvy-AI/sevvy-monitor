@@ -95,7 +95,8 @@ jobs:
             aws lambda update-function-configuration \
               --function-name $FUNCTION_NAME \
               --handler cloudwatch.handler \
-              --runtime nodejs20.x
+              --runtime nodejs20.x \
+              --environment Variables="{SEVVY_SERVER_BASE_URL=http://localhost:3000}"
           else
             echo "Function does not exist, creating new function..."
             aws lambda create-function \
@@ -106,7 +107,8 @@ jobs:
               --zip-file fileb://deployment.zip \
               --timeout 300 \
               --memory-size 512 \
-              --description "Sevvy CloudWatch monitoring function for dev environment"
+              --description "Sevvy CloudWatch monitoring function for dev environment" \
+              --environment Variables="{SEVVY_SERVER_BASE_URL=http://localhost:3000}"
           fi
 
   deploy_prod:
@@ -142,7 +144,8 @@ jobs:
             aws lambda update-function-configuration \
               --function-name $FUNCTION_NAME \
               --handler cloudwatch.handler \
-              --runtime nodejs20.x
+              --runtime nodejs20.x \
+              --environment Variables="{SEVVY_SERVER_BASE_URL=http://localhost:3000}"
           else
             echo "Function does not exist, creating new function..."
             aws lambda create-function \
@@ -153,5 +156,6 @@ jobs:
               --zip-file fileb://deployment.zip \
               --timeout 300 \
               --memory-size 512 \
-              --description "Sevvy CloudWatch monitoring function for prod environment"
+              --description "Sevvy CloudWatch monitoring function for prod environment" \
+              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api.sevvyai.com}"
           fi
