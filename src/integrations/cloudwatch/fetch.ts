@@ -9,6 +9,7 @@ import {
   createAssumedRoleCloudWatchLogsClient,
   createCloudWatchLogsClient,
 } from "./utils.js";
+import { dynamoDBService } from "../../shared/dynamodb.js";
 
 export interface LogFetchOptions {
   logGroupName: string;
@@ -91,24 +92,27 @@ export async function fetchCloudWatchLogs(
   }
 }
 
-export function getLastReadTime(
-  logGroupName: string,
-  awsAccountId: string
-): number {
-  // TODO: implement persistent storage (DynamoDB, Parameter Store, etc.)
-  console.log(
-    `[STUB] Getting last read time for ${logGroupName} in account ${awsAccountId}`
-  );
-  return subMinutes(Date.now(), 1).getTime();
+export async function getLastReadTime(
+  orgId: string,
+  resourceId: string
+): Promise<number> {
+  try {
+    return await dynamoDBService.getLastReadTime(orgId, resourceId);
+  } catch (error) {
+    console.error("Error getting last read time from DynamoDB:", error);
+    return subMinutes(Date.now(), 1).getTime();
+  }
 }
 
-export function updateLastReadTime(
-  logGroupName: string,
-  awsAccountId: string,
+export async function updateLastReadTime(
+  orgId: string,
+  resourceId: string,
   timestamp: number
-): void {
-  // TODO: implement persistent storage
-  console.log(
-    `[STUB] Updating last read time for ${logGroupName} in account ${awsAccountId} to ${new Date(timestamp).toISOString()}`
-  );
+): Promise<void> {
+  try {
+    await dynamoDBService.updateLastReadTime(orgId, resourceId, timestamp);
+  } catch (error) {
+    console.error("Error updating last read time in DynamoDB:", error);
+    throw error;
+  }
 }
