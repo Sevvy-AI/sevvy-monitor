@@ -47,14 +47,14 @@ export async function monitorCloudWatchLogs(
       intervalMinutes,
     });
 
-    const hasErrors = detectErrorsInLogs(logs, customErrorPatterns);
+    const errorDetectionResult = detectErrorsInLogs(logs, customErrorPatterns);
 
     const timestampToSave =
       logs.length > 0 ? Math.max(...logs.map(log => log.timestamp)) : endTime;
     await updateLastReadTime(event.orgId, event.resourceId, timestampToSave);
 
     console.log(
-      `Monitoring completed: ${logs.length} events processed, ${hasErrors ? "errors" : "no errors"} found`
+      `Monitoring completed: ${logs.length} events processed, ${errorDetectionResult.hasError ? "errors" : "no errors"} found`
     );
 
     const result: MonitoringResult = {
@@ -70,7 +70,7 @@ export async function monitorCloudWatchLogs(
         startTime,
         endTime,
       },
-      hasError: hasErrors,
+      errorDetectionResult,
     };
 
     return result;
@@ -93,7 +93,11 @@ export async function monitorCloudWatchLogs(
         startTime: event.startTime || Date.now() - intervalMinutes * 60 * 1000,
         endTime: event.endTime || Date.now(),
       },
-      hasError: false,
+      errorDetectionResult: {
+        hasError: false,
+        matchedPattern: null,
+        errorLines: [],
+      },
     };
   }
 }

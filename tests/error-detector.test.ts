@@ -33,14 +33,32 @@ describe("Error Detector", () => {
 
   describe("detectErrorsInLogs", () => {
     it("should detect errors using default patterns", () => {
-      const hasErrors = detectErrorsInLogs(sampleLogs);
-      expect(hasErrors).toBe(true);
+      const result = detectErrorsInLogs(sampleLogs);
+      expect(result.hasError).toBe(true);
+      expect(result.errorLines).toContain("ERROR: Database connection failed");
+      expect(result.matchedPattern).toBeTruthy();
     });
 
     it("should detect errors with custom patterns", () => {
       const customPattern = /WARN:/;
-      const hasErrors = detectErrorsInLogs(sampleLogs, [customPattern]);
-      expect(hasErrors).toBe(true);
+      const logsWithWarning: LogEvent[] = [
+        {
+          timestamp: 1640995200000,
+          message: "INFO: Application started successfully",
+        },
+        {
+          timestamp: 1640995320000,
+          message: "WARN: Low disk space",
+        },
+        {
+          timestamp: 1640995380000,
+          message: "DEBUG: Processing completed",
+        },
+      ];
+      const result = detectErrorsInLogs(logsWithWarning, [customPattern]);
+      expect(result.hasError).toBe(true);
+      expect(result.errorLines).toContain("WARN: Low disk space");
+      expect(result.matchedPattern).toBeTruthy();
     });
 
     it("should not match non-error messages", () => {
@@ -55,8 +73,10 @@ describe("Error Detector", () => {
         },
       ];
 
-      const hasErrors = detectErrorsInLogs(infoOnlyLogs);
-      expect(hasErrors).toBe(false);
+      const result = detectErrorsInLogs(infoOnlyLogs);
+      expect(result.hasError).toBe(false);
+      expect(result.errorLines).toEqual([]);
+      expect(result.matchedPattern).toBeNull();
     });
   });
 

@@ -15,7 +15,7 @@ export class AlertApiClient {
   }
 
   async sendAlert(payload: MonitoringResult): Promise<boolean> {
-    if (!payload.hasError) {
+    if (!payload.errorDetectionResult.hasError) {
       console.log("No errors detected, not sending alert.");
       return true;
     }
@@ -33,13 +33,14 @@ export class AlertApiClient {
       const apiUrl = `${this.apiUrl}/api/handleError`;
       console.log("Sending alert to:", apiUrl);
 
-      const alertPayload: Omit<MonitoringResult, "hasError"> = {
+      const alertPayload: MonitoringResult = {
         providerCode: payload.providerCode,
         orgId: payload.orgId,
         groupId: payload.groupId,
         resourceId: payload.resourceId,
         metadata: payload.metadata,
         timeRange: payload.timeRange,
+        errorDetectionResult: payload.errorDetectionResult,
       };
 
       const response = await fetchWithTimeout(

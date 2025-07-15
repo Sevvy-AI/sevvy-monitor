@@ -23,7 +23,11 @@ describe("Alert API", () => {
       startTime: 1640995200000,
       endTime: 1640995260000,
     },
-    hasError: true,
+    errorDetectionResult: {
+      hasError: true,
+      matchedPattern: /ERROR/i,
+      errorLines: ["ERROR: Database connection failed"],
+    },
   };
 
   beforeEach(() => {
@@ -66,7 +70,11 @@ describe("Alert API", () => {
       const client = new AlertApiClient({ apiUrl: "http://test-api.com" });
       const resultWithNoErrors: MonitoringResult = {
         ...mockResult,
-        hasError: false,
+        errorDetectionResult: {
+          hasError: false,
+          matchedPattern: null,
+          errorLines: [],
+        },
       };
 
       const result = await client.sendAlert(resultWithNoErrors);

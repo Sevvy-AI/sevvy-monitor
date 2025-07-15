@@ -74,7 +74,11 @@ export const handler = async (
             startTime: Date.now() - 60000,
             endTime: Date.now(),
           },
-          hasError: false,
+          errorDetectionResult: {
+            hasError: false,
+            matchedPattern: null,
+            errorLines: [],
+          },
         };
       }
     }
@@ -87,7 +91,7 @@ export const handler = async (
       intervalMinutes: 1,
     });
 
-    if (result.hasError) {
+    if (result.errorDetectionResult.hasError) {
       console.log(
         "Error found! Sending alert for AWS account: " +
           monitoringEvent.awsAccountNumber +
@@ -146,7 +150,11 @@ export const handler = async (
           startTime: Date.now() - 60000,
           endTime: Date.now(),
         },
-        hasError: false,
+        errorDetectionResult: {
+          hasError: false,
+          matchedPattern: null,
+          errorLines: [],
+        },
       };
     }
   }

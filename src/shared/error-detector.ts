@@ -1,4 +1,4 @@
-import type { LogEvent } from "../types/index.js";
+import type { LogEvent, RawLogErrorDetectionResult } from "../types/index.js";
 
 export const DEFAULT_ERROR_PATTERNS: RegExp[] = [
   /\b(error|ERROR|Error)\b/i,
@@ -18,30 +18,38 @@ export function getAllErrorPatterns(customPatterns: RegExp[] = []): RegExp[] {
 export function detectErrorsInLogs(
   logs: LogEvent[],
   customPatterns: RegExp[] = []
-): boolean {
+): RawLogErrorDetectionResult {
   console.log(`Running error detection on ${logs.length} log events`);
   for (const log of logs) {
     const detection = detectErrorInMessage(log.message, customPatterns);
     if (detection.hasError) {
-      return true;
+      return detection;
     }
   }
-  return false;
+  return { hasError: false, matchedPattern: null, errorLines: [] };
 }
 
 export function detectErrorInMessage(
   message: string,
   customPatterns: RegExp[] = []
-): { hasError: boolean; patternName?: string } {
+): RawLogErrorDetectionResult {
   const patterns = getAllErrorPatterns(customPatterns);
+  const lines = message.split("\n");
 
-  for (const pattern of patterns) {
-    if (pattern.test(message)) {
-      return {
-        hasError: true,
-      };
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    for (const pattern of patterns) {
+      if (pattern.test(line)) {
+        const trailingLines = lines.slice(i + 1, i + 4);
+        const errorLines = [line, ...trailingLines];
+        return {
+          hasError: true,
+          matchedPattern: pattern,
+          errorLines,
+        };
+      }
     }
   }
 
-  return { hasError: false };
+  return { hasError: false, matchedPattern: null, errorLines: [] };
 }

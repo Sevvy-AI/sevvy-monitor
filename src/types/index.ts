@@ -17,6 +17,12 @@ export interface LogEvent {
   message: string;
 }
 
+export interface RawLogErrorDetectionResult {
+  hasError: boolean;
+  matchedPattern: RegExp | null;
+  errorLines: string[];
+}
+
 export interface MonitoringResult {
   providerCode: ProviderCode;
   orgId: string;
@@ -27,7 +33,7 @@ export interface MonitoringResult {
     startTime: number;
     endTime: number;
   };
-  hasError: boolean;
+  errorDetectionResult: RawLogErrorDetectionResult;
 }
 
 export interface AssumedCredentials {
