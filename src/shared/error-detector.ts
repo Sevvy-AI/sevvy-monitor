@@ -1,7 +1,7 @@
 import type { LogEvent, RawLogErrorDetectionResult } from "../types/index.js";
 
 export const DEFAULT_ERROR_PATTERNS: RegExp[] = [
-  /\b(error|ERROR|Error)\b/i,
+  /(?<![\w/.-])\b(error|ERROR|Error)\b(?![/.-])/i,
   /\b(exception|Exception|EXCEPTION)\b/i,
   /\b(failed|Failed|FAILED|failure|Failure|FAILURE)\b/i,
   /\b(timeout|Timeout|TIMEOUT|timed out|TIMED OUT)\b/i,
@@ -38,13 +38,18 @@ export function detectErrorInMessage(
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+
+    if (isUrlOrPath(line)) {
+      continue;
+    }
+
     for (const pattern of patterns) {
       if (pattern.test(line)) {
         const trailingLines = lines.slice(i + 1, i + 4);
         const errorLines = [line, ...trailingLines];
         return {
           hasError: true,
-          matchedPattern: pattern,
+          matchedPattern: pattern.toString(),
           errorLines,
         };
       }
@@ -52,4 +57,16 @@ export function detectErrorInMessage(
   }
 
   return { hasError: false, matchedPattern: null, errorLines: [] };
+}
+
+function isUrlOrPath(line: string): boolean {
+  const urlPatterns = [
+    /https?:\/\/[^\s]+/i,
+    /(?:GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+[/\w.-]+/i,
+    /(?:Request|request):\s*(?:GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+[/\w.-]+/i,
+    /(?:Routing|routing)\s+to\s+[/\w.-]+/i,
+    /[/\w.-]+\/\w+[/\w.-]*/,
+  ];
+
+  return urlPatterns.some(pattern => pattern.test(line));
 }

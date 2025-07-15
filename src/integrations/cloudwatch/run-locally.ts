@@ -8,9 +8,9 @@ async function main() {
     awsAccountNumber: "663297832605",
     roleArn: "arn:aws:iam::663297832605:role/SevvyMonitoring",
     externalId: "sevvy-663297832605",
-    orgId: "org_2yszKYUZTsEz8vzbt7MOVbnxZFX",
-    groupId: "2d77eca9-be64-4989-a7b0-4be348a1b58b",
-    resourceId: "81759306-28fc-4911-b021-e9553d9fecd4",
+    orgId: "org_2zpuLVftGeLYWyQ3DcCZJjK0lpg",
+    groupId: "b5ba91fa-c330-4716-bf0d-65a95e95b870",
+    resourceId: "44fffd75-115e-44a4-9072-b7c035c84ad3",
   };
 
   console.log("Starting CloudWatch monitoring with event:");

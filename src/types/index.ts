@@ -19,7 +19,7 @@ export interface LogEvent {
 
 export interface RawLogErrorDetectionResult {
   hasError: boolean;
-  matchedPattern: RegExp | null;
+  matchedPattern: string | null;
   errorLines: string[];
 }
 
