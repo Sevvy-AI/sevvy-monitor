@@ -96,7 +96,7 @@ jobs:
               --function-name $FUNCTION_NAME \
               --handler cloudwatch.handler \
               --runtime nodejs20.x \
-              --environment Variables="{SEVVY_SERVER_BASE_URL=http://localhost:3000}"
+              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api.sevvyai.com}"
           else
             echo "Function does not exist, creating new function..."
             aws lambda create-function \
@@ -108,7 +108,7 @@ jobs:
               --timeout 300 \
               --memory-size 512 \
               --description "Sevvy CloudWatch monitoring function for dev environment" \
-              --environment Variables="{SEVVY_SERVER_BASE_URL=http://localhost:3000}"
+              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api.sevvyai.com}"
           fi
 
   deploy_prod:
