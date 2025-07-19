@@ -185,5 +185,81 @@ describe("Error Detector", () => {
       expect(result.errorLines).toEqual([]);
       expect(result.matchedPattern).toBeNull();
     });
+
+    it("should not detect timestamps with 4xx/5xx patterns as errors", () => {
+      const timestampMessages = [
+        "Jul 15 23:37:58 ip-172-31-7-171 web[653219]: 2025-07-15 23:37:58,439 - application - INFO - Attempting division calculation",
+        "2025-01-15 14:22:30,500 - worker - DEBUG - Processing request",
+        "Jan 01 12:34:56,432 server[1234]: Normal operation",
+        "2025-01-15T10:15:30.555Z INFO: System healthy",
+      ];
+
+      timestampMessages.forEach(message => {
+        const result = detectErrorInMessage(message);
+        expect(result.hasError).toBe(false);
+        expect(result.errorLines).toEqual([]);
+        expect(result.matchedPattern).toBeNull();
+      });
+    });
+
+    it("should detect actual HTTP status codes as errors", () => {
+      const httpErrorMessages = [
+        "HTTP 404 Not Found",
+        "Response status: 500",
+        "Error code 403",
+        "Status code: 400",
+        "Received 503 service unavailable",
+        "Request failed with 502",
+      ];
+
+      httpErrorMessages.forEach(message => {
+        const result = detectErrorInMessage(message);
+        expect(result.hasError).toBe(true);
+        expect(result.errorLines.length).toBeGreaterThan(0);
+        expect(result.matchedPattern).toBeTruthy();
+      });
+    });
+
+    it("should correctly handle mixed timestamp and HTTP status scenarios", () => {
+      const mixedMessage =
+        "2025-01-15 14:22:30,439 - web - ERROR - HTTP 500 Internal Server Error occurred";
+      const result = detectErrorInMessage(mixedMessage);
+
+      expect(result.hasError).toBe(true);
+      expect(result.errorLines).toContain(mixedMessage);
+      expect(result.matchedPattern).toBeTruthy();
+    });
+
+    it("should detect HTTP 400 responses without timestamps", () => {
+      const httpErrorMessages = [
+        "HTTP 400 Bad Request",
+        "Response: 400 Bad Request",
+        "Status code 400",
+        "Request failed with status 400",
+      ];
+
+      httpErrorMessages.forEach(message => {
+        const result = detectErrorInMessage(message);
+        expect(result.hasError).toBe(true);
+        expect(result.errorLines).toContain(message);
+        expect(result.matchedPattern).toBeTruthy();
+      });
+    });
+
+    it("should detect HTTP 400 responses even when timestamps are present", () => {
+      const httpErrorWithTimestampMessages = [
+        "2025-01-15 14:22:30,439 - web - HTTP 400 Bad Request received",
+        "Jan 15 23:37:58 server[12345]: Response: 400 client occurred",
+        "2025-01-15T10:15:30.555Z Status code 400 returned",
+        "Jul 15 22:59:22,048 - application - HTTP status 400 returned",
+      ];
+
+      httpErrorWithTimestampMessages.forEach(message => {
+        const result = detectErrorInMessage(message);
+        expect(result.hasError).toBe(true);
+        expect(result.errorLines).toContain(message);
+        expect(result.matchedPattern).toBeTruthy();
+      });
+    });
   });
 });
