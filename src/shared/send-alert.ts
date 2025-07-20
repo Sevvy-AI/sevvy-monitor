@@ -30,7 +30,7 @@ export class AlertApiClient {
     });
 
     try {
-      const apiUrl = `${this.apiUrl}/api/handleError`;
+      const apiUrl = `${this.apiUrl}/api/mcp/analyze`;
       console.log("Sending alert to:", apiUrl);
 
       const alertPayload: MonitoringResult = {

@@ -6,7 +6,7 @@ export const DEFAULT_ERROR_PATTERNS: RegExp[] = [
   /\b(failed|Failed|FAILED|failure|Failure|FAILURE)\b/i,
   /\b(timeout|Timeout|TIMEOUT|timed out|TIMED OUT)\b/i,
   /\b(connection|Connection|CONNECTION)\s+(error|Error|ERROR|failed|Failed|FAILED|refused|Refused|REFUSED)\b/i,
-  /\b(4\d{2}|5\d{2})\b|\b(bad request|unauthorized|forbidden|not found|internal server error|service unavailable)\b/i,
+  /(?:http|response|status|code|error)\s*:?\s*(4\d{2}|5\d{2})\b|\b(bad request|unauthorized|forbidden|not found|internal server error|service unavailable)\b/i,
   /\b(database|Database|DATABASE|sql|SQL|query|Query|QUERY)\s+(error|Error|ERROR|failed|Failed|FAILED)\b/i,
   /\b(aws|AWS|amazon|Amazon|AMAZON)\s+(error|Error|ERROR)\b|\b(AccessDenied|InvalidRequest|ThrottlingException|ServiceUnavailable)\b/i,
 ];
