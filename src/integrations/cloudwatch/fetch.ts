@@ -3,13 +3,13 @@ import {
   FilterLogEventsCommandInput,
 } from "@aws-sdk/client-cloudwatch-logs";
 import { subMinutes } from "date-fns";
-import type { LogEvent } from "../../types/index.js";
 import {
   assumeRole,
   createAssumedRoleCloudWatchLogsClient,
   createCloudWatchLogsClient,
 } from "./utils.js";
 import { dynamoDBService } from "../../shared/dynamodb.js";
+import { LogEvent } from "@/shared/types.js";
 
 export interface LogFetchOptions {
   logGroupName: string;

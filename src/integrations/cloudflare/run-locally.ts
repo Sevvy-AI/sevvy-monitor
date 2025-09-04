@@ -1,19 +1,19 @@
 import "dotenv/config";
-import { handler } from "../../handlers/cloudwatch.js";
-import { MonitoringEvent } from "@/shared/types.js";
+import { handler } from "../../handlers/cloudflare.js";
+import { CloudflareMonitoringEvent } from "@/shared/types.js";
 
 async function main() {
-  const event: MonitoringEvent = {
-    logGroupName: "/aws/elasticbeanstalk/sevvy-test-dev/var/log/web.stdout.log",
-    awsAccountNumber: "663297832605",
-    roleArn: "arn:aws:iam::663297832605:role/SevvyMonitoring",
-    externalId: "sevvy-663297832605",
+  const event: CloudflareMonitoringEvent = {
+    s3Bucket: "example-cloudflare-logpush",
+    s3Prefix: "workers/logs",
+    cloudflareAccountId: "example-account-id",
+    workerScriptName: "example-worker",
     orgId: "org_2zpuLVftGeLYWyQ3DcCZJjK0lpg",
     groupId: "b5ba91fa-c330-4716-bf0d-65a95e95b870",
     resourceId: "44fffd75-115e-44a4-9072-b7c035c84ad3",
   };
 
-  console.log("Starting CloudWatch monitoring with event:");
+  console.log("Starting Cloudflare monitoring with event:");
   console.log(JSON.stringify(event, null, 2));
   console.log("---");
 

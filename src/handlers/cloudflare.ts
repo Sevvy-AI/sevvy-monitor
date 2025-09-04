@@ -3,21 +3,21 @@ import type {
   APIGatewayProxyResult,
   Context,
 } from "aws-lambda";
-import { monitorCloudWatchLogs } from "../integrations/cloudwatch/monitor.js";
+import { monitorCloudflareLogs } from "../integrations/cloudflare/monitor.js";
 import { AlertApiClient } from "@/shared/send-alert.js";
-import { validateMonitoringEvent } from "@/integrations/cloudwatch/utils.js";
-import { CloudwatchMonitoringEvent, LogAgentInput } from "@/shared/types.js";
+import { validateCloudflareMonitoringEvent } from "@/integrations/cloudflare/utils.js";
+import { CloudflareMonitoringEvent, LogAgentInput } from "@/shared/types.js";
 
 export const handler = async (
-  event: APIGatewayProxyEvent | CloudwatchMonitoringEvent,
+  event: APIGatewayProxyEvent | CloudflareMonitoringEvent,
   context: Context
 ): Promise<APIGatewayProxyResult | LogAgentInput> => {
-  console.log("CloudWatch Lambda handler started");
+  console.log("Cloudflare Lambda handler started");
   console.log("Event:", JSON.stringify(event, null, 2));
   console.log("Context:", JSON.stringify(context, null, 2));
 
   try {
-    let monitoringEvent: CloudwatchMonitoringEvent;
+    let monitoringEvent: CloudflareMonitoringEvent;
 
     if ("httpMethod" in event) {
       if (!event.body) {
@@ -45,10 +45,10 @@ export const handler = async (
         };
       }
     } else {
-      monitoringEvent = event as CloudwatchMonitoringEvent;
+      monitoringEvent = event as CloudflareMonitoringEvent;
     }
 
-    const validationError = validateMonitoringEvent(monitoringEvent);
+    const validationError = validateCloudflareMonitoringEvent(monitoringEvent);
     if (validationError) {
       const errorResponse = {
         error: "Invalid monitoring parameters",
@@ -62,13 +62,15 @@ export const handler = async (
         };
       } else {
         return {
-          providerCode: "aws",
+          providerCode: "cloudflare",
           orgId: monitoringEvent.orgId,
           groupId: monitoringEvent.groupId,
           resourceId: monitoringEvent.resourceId,
           metadata: {
-            awsAccountNumber: monitoringEvent.awsAccountNumber,
-            logGroupName: monitoringEvent.logGroupName,
+            cloudflareAccountId: monitoringEvent.cloudflareAccountId,
+            workerScriptName: monitoringEvent.workerScriptName,
+            s3Bucket: monitoringEvent.s3Bucket,
+            s3Prefix: monitoringEvent.s3Prefix || "",
           },
           timeRange: {
             startTime: Date.now() - 60000,
@@ -84,19 +86,18 @@ export const handler = async (
     }
 
     console.log(
-      `Starting error detection for AWS account: ${monitoringEvent.awsAccountNumber} and log group: ${monitoringEvent.logGroupName}`
+      `Starting error detection for Cloudflare account: ${monitoringEvent.cloudflareAccountId} and worker: ${monitoringEvent.workerScriptName}`
     );
-    const result = await monitorCloudWatchLogs(monitoringEvent, {
+    const result = await monitorCloudflareLogs(monitoringEvent, {
       region: process.env.AWS_REGION || "us-east-1",
-      intervalMinutes: 1,
     });
 
     if (result.errorDetectionResult.hasError) {
       console.log(
-        "Error found! Sending alert for AWS account: " +
-          monitoringEvent.awsAccountNumber +
-          " and log group: " +
-          monitoringEvent.logGroupName
+        "Error found! Sending alert for Cloudflare account: " +
+          monitoringEvent.cloudflareAccountId +
+          " and worker: " +
+          monitoringEvent.workerScriptName
       );
       const alertClient = new AlertApiClient();
       const alertSent = await alertClient.sendAlert(result);
@@ -119,7 +120,7 @@ export const handler = async (
       return result;
     }
   } catch (error) {
-    console.error("Unexpected error in CloudWatch handler:", error);
+    console.error("Unexpected error in Cloudflare handler:", error);
 
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
@@ -138,13 +139,15 @@ export const handler = async (
       };
     } else {
       return {
-        providerCode: "aws",
+        providerCode: "cloudflare",
         orgId: "unknown",
         groupId: "unknown",
         resourceId: "unknown",
         metadata: {
-          awsAccountNumber: "unknown",
-          logGroupName: "unknown",
+          cloudflareAccountId: "unknown",
+          workerScriptName: "unknown",
+          s3Bucket: "unknown",
+          s3Prefix: "",
         },
         timeRange: {
           startTime: Date.now() - 60000,

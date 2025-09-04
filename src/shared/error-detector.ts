@@ -1,4 +1,4 @@
-import type { LogEvent, RawLogErrorDetectionResult } from "../types/index.js";
+import { LogEvent, RawLogErrorDetectionResult } from "./types";
 
 export const DEFAULT_ERROR_PATTERNS: RegExp[] = [
   /(?<![\w/.-])\b(error|ERROR|Error)\b(?![/.-])/i,

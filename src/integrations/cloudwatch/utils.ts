@@ -4,7 +4,7 @@ import {
   GetSecretValueCommand,
 } from "@aws-sdk/client-secrets-manager";
 import { CloudWatchLogsClient } from "@aws-sdk/client-cloudwatch-logs";
-import type { AssumedCredentials, MonitoringEvent } from "../../types/index.js";
+import { AssumedCredentials, CloudwatchMonitoringEvent } from "@/shared/types";
 
 interface AwsCredentials {
   AWS_ACCESS_KEY_ID: string;
@@ -112,7 +112,9 @@ export function createAssumedRoleCloudWatchLogsClient(
   });
 }
 
-export function validateMonitoringEvent(event: MonitoringEvent): string | null {
+export function validateMonitoringEvent(
+  event: CloudwatchMonitoringEvent
+): string | null {
   if (!event.logGroupName) {
     return "logGroupName is required";
   }

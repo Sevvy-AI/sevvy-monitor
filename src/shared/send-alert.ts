@@ -1,4 +1,4 @@
-import type { MonitoringResult } from "../types/index.js";
+import { LogAgentInput } from "./types.js";
 import { fetchWithTimeout } from "./utils.js";
 
 export interface AlertApiConfig {
@@ -14,7 +14,7 @@ export class AlertApiClient {
     this.timeout = 10000;
   }
 
-  async sendAlert(payload: MonitoringResult): Promise<boolean> {
+  async sendAlert(payload: LogAgentInput): Promise<boolean> {
     if (!payload.errorDetectionResult.hasError) {
       console.log("No errors detected, not sending alert.");
       return true;
@@ -33,7 +33,7 @@ export class AlertApiClient {
       const apiUrl = `${this.apiUrl}/api/mcp/analyze`;
       console.log("Sending alert to:", apiUrl);
 
-      const alertPayload: MonitoringResult = {
+      const alertPayload: LogAgentInput = {
         providerCode: payload.providerCode,
         orgId: payload.orgId,
         groupId: payload.groupId,
