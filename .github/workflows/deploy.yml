@@ -125,7 +125,7 @@ jobs:
               --function-name $FUNCTION_NAME \
               --handler cloudflare.handler \
               --runtime nodejs20.x \
-              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api-dev.sevvyai.com,MAX_MINUTES_PER_RUN=10,SAFETY_MINUTES=1}"
+              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api-dev.sevvyai.com,MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1}"
           else
             echo "Function does not exist, creating new function..."
             aws lambda create-function \
@@ -137,7 +137,7 @@ jobs:
               --timeout 300 \
               --memory-size 512 \
               --description "Sevvy Cloudflare monitoring function for dev environment" \
-              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api-dev.sevvyai.com,MAX_MINUTES_PER_RUN=10,SAFETY_MINUTES=1}"
+              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api-dev.sevvyai.com,MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1}"
           fi
 
   deploy_prod:
