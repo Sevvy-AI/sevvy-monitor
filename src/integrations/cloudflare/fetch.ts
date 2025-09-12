@@ -81,7 +81,7 @@ export async function fetchCloudflareLogsForMinute(
   );
 
   console.log(
-    `Fetching Cloudflare logs from S3: bucket=${s3Bucket}, prefix=${prefix}`
+    `Fetching Cloudflare logs from S3: bucket=${s3Bucket}, prefix=${prefix}log.ndjson.gz`
   );
 
   const listParams: ListObjectsV2CommandInput = {
@@ -117,6 +117,11 @@ export async function fetchCloudflareLogsForMinute(
 
       for (const object of sortedObjects) {
         if (!object.Key) continue;
+
+        if (!object.Key.endsWith("log.ndjson.gz")) {
+          console.warn(`Skipping unexpected file: ${object.Key}`);
+          continue;
+        }
 
         console.log(`Processing S3 object: ${object.Key}`);
 
