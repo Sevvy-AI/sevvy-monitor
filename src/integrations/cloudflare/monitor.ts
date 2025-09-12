@@ -140,11 +140,89 @@ export async function monitorCloudflareLogs(
             `Advanced progress to: ${new Date(lastSuccessfulMinute).toISOString()}`
           );
         } else {
-          console.log(
-            `No logs found for minute ${new Date(minuteTimestamp).toISOString()}, ` +
-              `not advancing lastReadTime - will retry on next invocation`
-          );
-          break;
+          const timeSinceMinute = currentTime - minuteTimestamp;
+          const tenMinutesInMs = 10 * 60 * 1000;
+
+          if (timeSinceMinute > tenMinutesInMs) {
+            console.log(
+              `No logs found for minute ${new Date(minuteTimestamp).toISOString()}, ` +
+                `checking for next available logs (we're ${Math.floor(timeSinceMinute / 60000)} minutes past this timestamp)`
+            );
+
+            const searchTimestamp = minuteTimestamp + 60000;
+            let foundLogs = false;
+
+            const searchCandidates = [searchTimestamp];
+
+            if (currentTime - searchTimestamp > tenMinutesInMs) {
+              for (
+                let offset = tenMinutesInMs;
+                searchTimestamp + offset < currentTime - safetyMinutes * 60000;
+                offset += tenMinutesInMs
+              ) {
+                searchCandidates.push(searchTimestamp + offset);
+              }
+            }
+
+            for (const candidateTimestamp of searchCandidates) {
+              console.log(
+                `Searching for logs at ${new Date(candidateTimestamp).toISOString()}`
+              );
+
+              try {
+                const searchResults = await fetchCloudflareLogsBatch({
+                  s3Bucket,
+                  s3Prefix,
+                  cloudflareAccountId,
+                  workerScriptName,
+                  minutesToRead: [candidateTimestamp],
+                  region,
+                });
+
+                if (
+                  searchResults.length > 0 &&
+                  searchResults[0].logs &&
+                  searchResults[0].logs.length > 0
+                ) {
+                  console.log(
+                    `Found logs at ${new Date(candidateTimestamp).toISOString()}, ` +
+                      `skipping ahead to this timestamp`
+                  );
+
+                  lastSuccessfulMinute = candidateTimestamp;
+                  await updateLastReadTime(
+                    event.orgId,
+                    event.resourceId,
+                    lastSuccessfulMinute
+                  );
+                  console.log(
+                    `Advanced progress to: ${new Date(lastSuccessfulMinute).toISOString()}`
+                  );
+                  foundLogs = true;
+                  break;
+                }
+              } catch (searchError) {
+                console.error(
+                  `Error searching for logs at ${new Date(candidateTimestamp).toISOString()}:`,
+                  searchError
+                );
+              }
+            }
+
+            if (!foundLogs) {
+              console.log(
+                `No logs found in any search candidates, will retry on next invocation`
+              );
+            }
+            break;
+          } else {
+            console.log(
+              `No logs found for minute ${new Date(minuteTimestamp).toISOString()}, ` +
+                `not advancing lastReadTime - will retry on next invocation ` +
+                `(only ${Math.floor(timeSinceMinute / 60000)} minutes old)`
+            );
+            break;
+          }
         }
       } catch (error) {
         console.error(

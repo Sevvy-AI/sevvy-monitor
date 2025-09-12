@@ -5,7 +5,7 @@ import { CloudflareMonitoringEvent } from "@/shared/types.js";
 async function main() {
   const event: CloudflareMonitoringEvent = {
     s3Bucket: "sevvy-dev",
-    s3Prefix: "cf-logs/05eb517357a5bc044516448d2f53069a/sevvy-cron-test",
+    s3Prefix: "cf-logs",
     cloudflareAccountId: "05eb517357a5bc044516448d2f53069a",
     workerScriptName: "sevvy-cron-test",
     orgId: "org_2zpuLVftGeLYWyQ3DcCZJjK0lpg",
