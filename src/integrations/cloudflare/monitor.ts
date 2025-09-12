@@ -14,7 +14,7 @@ import {
 export interface CloudflareMonitorOptions {
   customErrorPatterns?: RegExp[];
   region?: string;
-  maxMinutesPerRun?: number;
+  maxMinutesOfLogsPerRun?: number;
   safetyMinutes?: number;
 }
 
@@ -25,7 +25,10 @@ export async function monitorCloudflareLogs(
   const {
     customErrorPatterns = [],
     region = "us-east-1",
-    maxMinutesPerRun = parseInt(process.env.MAX_MINUTES_PER_RUN || "10", 10),
+    maxMinutesOfLogsPerRun = parseInt(
+      process.env.MAX_MINUTES_PER_RUN || "120",
+      10
+    ),
     safetyMinutes = parseInt(process.env.SAFETY_MINUTES || "1", 10),
   } = options;
 
@@ -50,7 +53,7 @@ export async function monitorCloudflareLogs(
       lastReadTime,
       currentTime,
       safetyMinutes,
-      maxMinutesPerRun
+      maxMinutesOfLogsPerRun
     );
 
     if (minutesToRead.length === 0) {
@@ -79,7 +82,10 @@ export async function monitorCloudflareLogs(
     }
 
     console.log(
-      `Processing ${minutesToRead.length} minutes from ${new Date(minutesToRead[0]).toISOString()} to ${new Date(minutesToRead[minutesToRead.length - 1]).toISOString()}`
+      `Processing ${minutesToRead.length} minute(s) starting from ${new Date(minutesToRead[0]).toISOString()}` +
+        (minutesToRead.length > 1
+          ? ` to ${new Date(minutesToRead[minutesToRead.length - 1]).toISOString()}`
+          : "")
     );
 
     const allLogs: LogEvent[] = [];
@@ -100,9 +106,18 @@ export async function monitorCloudflareLogs(
           region,
         });
 
-        if (batchResults.length > 0 && batchResults[0].logs) {
+        const hasLogs =
+          batchResults.length > 0 &&
+          batchResults[0].logs &&
+          batchResults[0].logs.length > 0;
+
+        if (hasLogs) {
           const logs = batchResults[0].logs;
           allLogs.push(...logs);
+
+          console.log(
+            `Found ${logs.length} log events for minute ${new Date(minuteTimestamp).toISOString()}`
+          );
 
           const errorDetectionResult = detectErrorsInLogs(
             logs,
@@ -114,18 +129,23 @@ export async function monitorCloudflareLogs(
               `Error detected in minute ${new Date(minuteTimestamp).toISOString()}: ${errorDetectionResult.matchedPattern}`
             );
           }
+
+          lastSuccessfulMinute = minuteTimestamp + 60000;
+          await updateLastReadTime(
+            event.orgId,
+            event.resourceId,
+            lastSuccessfulMinute
+          );
+          console.log(
+            `Advanced progress to: ${new Date(lastSuccessfulMinute).toISOString()}`
+          );
+        } else {
+          console.log(
+            `No logs found for minute ${new Date(minuteTimestamp).toISOString()}, ` +
+              `not advancing lastReadTime - will retry on next invocation`
+          );
+          break;
         }
-
-        lastSuccessfulMinute = minuteTimestamp + 60000;
-
-        await updateLastReadTime(
-          event.orgId,
-          event.resourceId,
-          lastSuccessfulMinute
-        );
-        console.log(
-          `Advanced progress to: ${new Date(lastSuccessfulMinute).toISOString()}`
-        );
       } catch (error) {
         console.error(
           `Failed to process minute ${new Date(minuteTimestamp).toISOString()}, stopping:`,

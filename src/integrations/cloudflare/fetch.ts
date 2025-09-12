@@ -103,8 +103,10 @@ export async function fetchCloudflareLogsForMinute(
       const listResponse = await s3Client.send(listCommand);
 
       if (!listResponse.Contents || listResponse.Contents.length === 0) {
+        const minuteDate = new Date(minuteTimestamp);
         console.log(
-          `No objects found for minute ${new Date(minuteTimestamp).toISOString()}`
+          `No S3 objects found for minute ${minuteDate.toISOString()} ` +
+            `(path: ${prefix})`
         );
         break;
       }
@@ -151,9 +153,16 @@ export async function fetchCloudflareLogsForMinute(
       continuationToken = listResponse.NextContinuationToken;
     } while (continuationToken);
 
-    console.log(
-      `Fetched ${allLogs.length} total log events for minute ${new Date(minuteTimestamp).toISOString()}`
-    );
+    if (allLogs.length === 0) {
+      console.log(
+        `No log events found for minute ${new Date(minuteTimestamp).toISOString()} - ` +
+          `logs may be delayed in S3`
+      );
+    } else {
+      console.log(
+        `Fetched ${allLogs.length} total log events for minute ${new Date(minuteTimestamp).toISOString()}`
+      );
+    }
     return allLogs;
   } catch (error) {
     console.error(`Error fetching logs from S3:`, error);

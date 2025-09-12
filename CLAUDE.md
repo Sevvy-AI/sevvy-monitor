@@ -87,6 +87,13 @@ ALERT_API_URL=https://api.example.com/alerts  # Alert API endpoint
 ALERT_API_KEY=your-secret-key                # Alert API authentication key
 ```
 
+### Cloudflare Monitoring Configuration
+
+```bash
+MAX_MINUTES_PER_RUN=120                 # Maximum minutes to process per Lambda invocation (default: 120)
+SAFETY_MINUTES=1                        # Safety buffer minutes before current time (default: 1)
+```
+
 ## Lambda Function Configuration
 
 ### CloudWatch Handler

@@ -4,10 +4,10 @@ import { CloudflareMonitoringEvent } from "@/shared/types.js";
 
 async function main() {
   const event: CloudflareMonitoringEvent = {
-    s3Bucket: "example-cloudflare-logpush",
-    s3Prefix: "workers/logs",
-    cloudflareAccountId: "example-account-id",
-    workerScriptName: "example-worker",
+    s3Bucket: "sevvy-dev",
+    s3Prefix: "cf-logs/05eb517357a5bc044516448d2f53069a/sevvy-cron-test",
+    cloudflareAccountId: "05eb517357a5bc044516448d2f53069a",
+    workerScriptName: "sevvy-cron-test",
     orgId: "org_2zpuLVftGeLYWyQ3DcCZJjK0lpg",
     groupId: "b5ba91fa-c330-4716-bf0d-65a95e95b870",
     resourceId: "44fffd75-115e-44a4-9072-b7c035c84ad3",
