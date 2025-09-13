@@ -90,6 +90,8 @@ export async function monitorCloudflareLogs(
 
     const allLogs: LogEvent[] = [];
     let lastSuccessfulMinute = lastReadTime;
+    let earliestErrorTimestamp: number | undefined;
+    let latestErrorTimestamp: number | undefined;
 
     for (const minuteTimestamp of minutesToRead) {
       console.log(
@@ -128,6 +130,23 @@ export async function monitorCloudflareLogs(
             console.log(
               `Error detected in minute ${new Date(minuteTimestamp).toISOString()}: ${errorDetectionResult.matchedPattern}`
             );
+            if (
+              "errorTimestamp" in errorDetectionResult &&
+              errorDetectionResult.errorTimestamp
+            ) {
+              if (
+                !earliestErrorTimestamp ||
+                errorDetectionResult.errorTimestamp < earliestErrorTimestamp
+              ) {
+                earliestErrorTimestamp = errorDetectionResult.errorTimestamp;
+              }
+              if (
+                !latestErrorTimestamp ||
+                errorDetectionResult.errorTimestamp > latestErrorTimestamp
+              ) {
+                latestErrorTimestamp = errorDetectionResult.errorTimestamp;
+              }
+            }
           }
 
           lastSuccessfulMinute = minuteTimestamp + 60000;
@@ -237,6 +256,27 @@ export async function monitorCloudflareLogs(
                           console.log(
                             `Error detected during backfill in minute ${new Date(backfillMinute).toISOString()}: ${errorDetectionResult.matchedPattern}`
                           );
+                          if (
+                            "errorTimestamp" in errorDetectionResult &&
+                            errorDetectionResult.errorTimestamp
+                          ) {
+                            if (
+                              !earliestErrorTimestamp ||
+                              errorDetectionResult.errorTimestamp <
+                                earliestErrorTimestamp
+                            ) {
+                              earliestErrorTimestamp =
+                                errorDetectionResult.errorTimestamp;
+                            }
+                            if (
+                              !latestErrorTimestamp ||
+                              errorDetectionResult.errorTimestamp >
+                                latestErrorTimestamp
+                            ) {
+                              latestErrorTimestamp =
+                                errorDetectionResult.errorTimestamp;
+                            }
+                          }
                         }
                       } else {
                         console.log(
@@ -305,6 +345,25 @@ export async function monitorCloudflareLogs(
       `Monitoring completed: ${allLogs.length} events processed across ${minutesToRead.length} minutes, ${finalErrorDetectionResult.hasError ? "errors" : "no errors"} found`
     );
 
+    let timeRangeStart: number;
+    let timeRangeEnd: number;
+
+    if (
+      finalErrorDetectionResult.hasError &&
+      earliestErrorTimestamp &&
+      latestErrorTimestamp
+    ) {
+      timeRangeStart = earliestErrorTimestamp - 60000;
+      timeRangeEnd = latestErrorTimestamp + 60000;
+      console.log(
+        `Using error-based time range: ${new Date(timeRangeStart).toISOString()} to ${new Date(timeRangeEnd).toISOString()}`
+      );
+    } else {
+      timeRangeStart =
+        minutesToRead.length > 0 ? minutesToRead[0] : lastReadTime;
+      timeRangeEnd = lastSuccessfulMinute;
+    }
+
     const result: LogAgentInput = {
       providerCode: "cloudflare",
       orgId: event.orgId,
@@ -318,8 +377,8 @@ export async function monitorCloudflareLogs(
         minutesProcessed: minutesToRead.length.toString(),
       },
       timeRange: {
-        startTime: minutesToRead.length > 0 ? minutesToRead[0] : lastReadTime,
-        endTime: lastSuccessfulMinute,
+        startTime: timeRangeStart,
+        endTime: timeRangeEnd,
       },
       errorDetectionResult: finalErrorDetectionResult,
     };
