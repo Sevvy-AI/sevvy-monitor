@@ -48,9 +48,30 @@ async function parseNDJSON(content: string): Promise<LogEvent[]> {
 
     try {
       const logEntry = JSON.parse(line);
+
+      let message = "";
+
+      if (logEntry.msg) {
+        if (Array.isArray(logEntry.msg)) {
+          message = logEntry.msg.join(" ");
+        } else {
+          message = String(logEntry.msg);
+        }
+      } else if (logEntry.message) {
+        message = String(logEntry.message);
+      } else {
+        message = JSON.stringify(logEntry);
+      }
+
+      if (logEntry.level && logEntry.script_name) {
+        message = `[${logEntry.script_name}] [${logEntry.level}] ${message}`;
+      } else if (logEntry.level) {
+        message = `[${logEntry.level}] ${message}`;
+      }
+
       logs.push({
-        timestamp: logEntry.timestamp || Date.now(),
-        message: JSON.stringify(logEntry),
+        timestamp: logEntry.timestamp || logEntry.ts || Date.now(),
+        message,
       });
     } catch (error) {
       console.warn("Failed to parse NDJSON line:", line, error);
