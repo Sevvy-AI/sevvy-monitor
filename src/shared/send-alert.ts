@@ -31,8 +31,7 @@ export class AlertApiClient {
 
     try {
       const apiUrl = `${this.apiUrl}/api/mcp/analyze`;
-      console.log("Sending alert to:", apiUrl);
-
+      
       const alertPayload: LogAgentInput = {
         providerCode: payload.providerCode,
         orgId: payload.orgId,
@@ -42,6 +41,9 @@ export class AlertApiClient {
         timeRange: payload.timeRange,
         errorDetectionResult: payload.errorDetectionResult,
       };
+
+      console.log("Sending alert to:", apiUrl);
+      console.log("Alert payload:", JSON.stringify(alertPayload, null, 2));
 
       const response = await fetchWithTimeout(
         apiUrl,

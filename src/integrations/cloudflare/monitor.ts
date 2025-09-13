@@ -186,8 +186,71 @@ export async function monitorCloudflareLogs(
                 ) {
                   console.log(
                     `Found logs at ${new Date(candidateTimestamp).toISOString()}, ` +
-                      `skipping ahead to this timestamp`
+                      `now backfilling from ${new Date(minuteTimestamp + 60000).toISOString()} to process any skipped minutes`
                   );
+
+                  const backfillStart = minuteTimestamp + 60000;
+                  const backfillEnd = candidateTimestamp;
+                  const backfillMinutes: number[] = [];
+
+                  for (
+                    let backfillMinute = backfillStart;
+                    backfillMinute <= backfillEnd;
+                    backfillMinute += 60000
+                  ) {
+                    backfillMinutes.push(backfillMinute);
+                  }
+
+                  console.log(
+                    `Backfilling ${backfillMinutes.length} minute(s) from ${new Date(backfillStart).toISOString()} to ${new Date(backfillEnd).toISOString()}`
+                  );
+
+                  for (const backfillMinute of backfillMinutes) {
+                    try {
+                      const backfillResults = await fetchCloudflareLogsBatch({
+                        s3Bucket,
+                        s3Prefix,
+                        cloudflareAccountId,
+                        workerScriptName,
+                        minutesToRead: [backfillMinute],
+                        region,
+                      });
+
+                      if (
+                        backfillResults.length > 0 &&
+                        backfillResults[0].logs &&
+                        backfillResults[0].logs.length > 0
+                      ) {
+                        const logs = backfillResults[0].logs;
+                        allLogs.push(...logs);
+
+                        console.log(
+                          `Backfilled ${logs.length} log events for minute ${new Date(backfillMinute).toISOString()}`
+                        );
+
+                        const errorDetectionResult = detectErrorsInLogs(
+                          logs,
+                          customErrorPatterns
+                        );
+
+                        if (errorDetectionResult.hasError) {
+                          console.log(
+                            `Error detected during backfill in minute ${new Date(backfillMinute).toISOString()}: ${errorDetectionResult.matchedPattern}`
+                          );
+                        }
+                      } else {
+                        console.log(
+                          `No logs found during backfill for minute ${new Date(backfillMinute).toISOString()}`
+                        );
+                      }
+                    } catch (backfillError) {
+                      console.error(
+                        `Error during backfill for minute ${new Date(backfillMinute).toISOString()}:`,
+                        backfillError
+                      );
+                      // Continue with next minute even if one fails
+                    }
+                  }
 
                   lastSuccessfulMinute = candidateTimestamp;
                   await updateLastReadTime(
@@ -196,7 +259,7 @@ export async function monitorCloudflareLogs(
                     lastSuccessfulMinute
                   );
                   console.log(
-                    `Advanced progress to: ${new Date(lastSuccessfulMinute).toISOString()}`
+                    `After backfill, advanced progress to: ${new Date(lastSuccessfulMinute).toISOString()}`
                   );
                   foundLogs = true;
                   break;
