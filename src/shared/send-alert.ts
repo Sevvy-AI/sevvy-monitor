@@ -31,7 +31,7 @@ export class AlertApiClient {
 
     try {
       const apiUrl = `${this.apiUrl}/api/mcp/analyze`;
-      
+
       const alertPayload: LogAgentInput = {
         providerCode: payload.providerCode,
         orgId: payload.orgId,
