@@ -1,6 +1,6 @@
-export type ProviderCode = "aws";
+export type ProviderCode = "aws" | "cloudflare";
 
-export interface MonitoringEvent {
+export interface CloudwatchMonitoringEvent {
   logGroupName: string;
   awsAccountNumber: string;
   roleArn: string;
@@ -11,6 +11,22 @@ export interface MonitoringEvent {
   startTime?: number;
   endTime?: number;
 }
+
+export interface CloudflareMonitoringEvent {
+  s3Bucket: string;
+  s3Prefix?: string;
+  cloudflareAccountId: string;
+  workerScriptName: string;
+  orgId: string;
+  groupId: string;
+  resourceId: string;
+  startTime?: number;
+  endTime?: number;
+}
+
+export type MonitoringEvent =
+  | CloudwatchMonitoringEvent
+  | CloudflareMonitoringEvent;
 
 export interface LogEvent {
   timestamp: number;
@@ -23,7 +39,7 @@ export interface RawLogErrorDetectionResult {
   errorLines: string[];
 }
 
-export interface MonitoringResult {
+export interface LogAgentInput {
   providerCode: ProviderCode;
   orgId: string;
   groupId: string;

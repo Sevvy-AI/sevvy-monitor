@@ -82,7 +82,7 @@ jobs:
         with:
           name: lambda-deployment
 
-      - name: Deploy Lambda Function
+      - name: Deploy AWS CloudWatch Lambda Function
         run: |
           FUNCTION_NAME="sevvy-monitor-aws-dev"
 
@@ -111,6 +111,35 @@ jobs:
               --environment Variables="{SEVVY_SERVER_BASE_URL=https://api-dev.sevvyai.com}"
           fi
 
+      - name: Deploy Cloudflare Lambda Function
+        run: |
+          FUNCTION_NAME="sevvy-monitor-cloudflare-dev"
+
+          if aws lambda get-function --function-name $FUNCTION_NAME >/dev/null 2>&1; then
+            echo "Function exists, updating code..."
+            aws lambda update-function-code \
+              --function-name $FUNCTION_NAME \
+              --zip-file fileb://deployment.zip
+            aws lambda wait function-updated-v2 --function-name $FUNCTION_NAME
+            aws lambda update-function-configuration \
+              --function-name $FUNCTION_NAME \
+              --handler cloudflare.handler \
+              --runtime nodejs20.x \
+              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api-dev.sevvyai.com,MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1}"
+          else
+            echo "Function does not exist, creating new function..."
+            aws lambda create-function \
+              --function-name $FUNCTION_NAME \
+              --runtime nodejs20.x \
+              --role arn:aws:iam::454953019043:role/MonitoringLambdaExecutionRole \
+              --handler cloudflare.handler \
+              --zip-file fileb://deployment.zip \
+              --timeout 300 \
+              --memory-size 512 \
+              --description "Sevvy Cloudflare monitoring function for dev environment" \
+              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api-dev.sevvyai.com,MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1}"
+          fi
+
   deploy_prod:
     name: Deploy to Prod
     runs-on: ubuntu-latest
@@ -131,7 +160,7 @@ jobs:
         with:
           name: lambda-deployment
 
-      - name: Deploy Lambda Function
+      - name: Deploy AWS CloudWatch Lambda Function
         run: |
           FUNCTION_NAME="sevvy-monitor-aws-prod"
 
@@ -158,4 +187,33 @@ jobs:
               --memory-size 512 \
               --description "Sevvy CloudWatch monitoring function for prod environment" \
               --environment Variables="{SEVVY_SERVER_BASE_URL=https://api.sevvyai.com}"
+          fi
+
+      - name: Deploy Cloudflare Lambda Function
+        run: |
+          FUNCTION_NAME="sevvy-monitor-cloudflare-prod"
+
+          if aws lambda get-function --function-name $FUNCTION_NAME >/dev/null 2>&1; then
+            echo "Function exists, updating code..."
+            aws lambda update-function-code \
+              --function-name $FUNCTION_NAME \
+              --zip-file fileb://deployment.zip
+            aws lambda wait function-updated-v2 --function-name $FUNCTION_NAME
+            aws lambda update-function-configuration \
+              --function-name $FUNCTION_NAME \
+              --handler cloudflare.handler \
+              --runtime nodejs20.x \
+              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api.sevvyai.com,MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1}"
+          else
+            echo "Function does not exist, creating new function..."
+            aws lambda create-function \
+              --function-name $FUNCTION_NAME \
+              --runtime nodejs20.x \
+              --role arn:aws:iam::390240928083:role/MonitoringLambdaExecutionRole \
+              --handler cloudflare.handler \
+              --zip-file fileb://deployment.zip \
+              --timeout 300 \
+              --memory-size 512 \
+              --description "Sevvy Cloudflare monitoring function for prod environment" \
+              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api.sevvyai.com,MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1}"
           fi

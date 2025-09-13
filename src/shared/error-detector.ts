@@ -1,4 +1,4 @@
-import type { LogEvent, RawLogErrorDetectionResult } from "../types/index.js";
+import { LogEvent, RawLogErrorDetectionResult } from "./types";
 
 export const DEFAULT_ERROR_PATTERNS: RegExp[] = [
   /(?<![\w/.-])\b(error|ERROR|Error)\b(?![/.-])/i,
@@ -18,12 +18,12 @@ export function getAllErrorPatterns(customPatterns: RegExp[] = []): RegExp[] {
 export function detectErrorsInLogs(
   logs: LogEvent[],
   customPatterns: RegExp[] = []
-): RawLogErrorDetectionResult {
+): RawLogErrorDetectionResult & { errorTimestamp?: number } {
   console.log(`Running error detection on ${logs.length} log events`);
   for (const log of logs) {
     const detection = detectErrorInMessage(log.message, customPatterns);
     if (detection.hasError) {
-      return detection;
+      return { ...detection, errorTimestamp: log.timestamp };
     }
   }
   return { hasError: false, matchedPattern: null, errorLines: [] };

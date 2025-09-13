@@ -1,10 +1,10 @@
 import { detectErrorsInLogs } from "@/shared/error-detector.js";
-import type { MonitoringEvent, MonitoringResult } from "../../types/index.js";
 import {
   fetchCloudWatchLogs,
   getLastReadTime,
   updateLastReadTime,
 } from "./fetch.js";
+import { CloudwatchMonitoringEvent, LogAgentInput } from "@/shared/types.js";
 
 export interface CloudWatchMonitorOptions {
   customErrorPatterns?: RegExp[];
@@ -13,9 +13,9 @@ export interface CloudWatchMonitorOptions {
 }
 
 export async function monitorCloudWatchLogs(
-  event: MonitoringEvent,
+  event: CloudwatchMonitoringEvent,
   options: CloudWatchMonitorOptions = {}
-): Promise<MonitoringResult> {
+): Promise<LogAgentInput> {
   const {
     customErrorPatterns = [],
     region = "us-east-1",
@@ -57,7 +57,7 @@ export async function monitorCloudWatchLogs(
       `Monitoring completed: ${logs.length} events processed, ${errorDetectionResult.hasError ? "errors" : "no errors"} found`
     );
 
-    const result: MonitoringResult = {
+    const result: LogAgentInput = {
       providerCode: "aws",
       orgId: event.orgId,
       groupId: event.groupId,
