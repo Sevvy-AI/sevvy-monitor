@@ -1,4 +1,4 @@
-export type ProviderCode = "aws" | "cloudflare";
+export type ProviderCode = "aws" | "cloudflare" | "vercel";
 
 export interface CloudwatchMonitoringEvent {
   logGroupName: string;
@@ -24,9 +24,19 @@ export interface CloudflareMonitoringEvent {
   endTime?: number;
 }
 
+export interface VercelMonitoringEvent {
+  projectName: string;
+  orgId: string;
+  groupId: string;
+  resourceId: string;
+  startTime?: number;
+  endTime?: number;
+}
+
 export type MonitoringEvent =
   | CloudwatchMonitoringEvent
-  | CloudflareMonitoringEvent;
+  | CloudflareMonitoringEvent
+  | VercelMonitoringEvent;
 
 export interface LogEvent {
   timestamp: number;
