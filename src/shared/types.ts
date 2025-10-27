@@ -67,3 +67,16 @@ export interface AssumedCredentials {
   secretAccessKey: string;
   sessionToken: string;
 }
+
+export interface QueueMessage {
+  eventType: EventType;
+  payload: LogAgentInput;
+}
+
+export const EVENT_TYPE = {
+  LOG_ERROR: "log_error",
+  EXECUTION_FAILURE: "execution_failure",
+  DATA_ANOMALY: "data_anomaly",
+} as const;
+
+export type EventType = (typeof EVENT_TYPE)[keyof typeof EVENT_TYPE];
