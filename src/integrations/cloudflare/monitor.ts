@@ -402,7 +402,7 @@ export async function monitorCloudflareLogs(
         s3Prefix: s3Prefix || "",
       },
       timeRange: {
-        startTime: event.startTime || minuteStart(Date.now() - 120000),
+        startTime: event.startTime || minuteStart(Date.now() - 60000),
         endTime: event.endTime || Date.now(),
       },
       errorDetectionResult: {
