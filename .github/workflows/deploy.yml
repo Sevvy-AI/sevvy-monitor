@@ -96,7 +96,7 @@ jobs:
               --function-name $FUNCTION_NAME \
               --handler cloudwatch.handler \
               --runtime nodejs20.x \
-              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api-dev.sevvyai.com,SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/454953019043/sevvy-agent-analysis-queue}"
+              --environment Variables="{SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/454953019043/sevvy-agent-analysis-queue}"
           else
             echo "Function does not exist, creating new function..."
             aws lambda create-function \
@@ -108,7 +108,7 @@ jobs:
               --timeout 300 \
               --memory-size 512 \
               --description "Sevvy CloudWatch monitoring function for dev environment" \
-              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api-dev.sevvyai.com,SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/454953019043/sevvy-agent-analysis-queue}"
+              --environment Variables="{SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/454953019043/sevvy-agent-analysis-queue}"
           fi
 
       - name: Deploy Cloudflare Lambda Function
@@ -125,7 +125,7 @@ jobs:
               --function-name $FUNCTION_NAME \
               --handler cloudflare.handler \
               --runtime nodejs20.x \
-              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api-dev.sevvyai.com,MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1,SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/454953019043/sevvy-agent-analysis-queue}"
+              --environment Variables="{MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1,SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/454953019043/sevvy-agent-analysis-queue}"
           else
             echo "Function does not exist, creating new function..."
             aws lambda create-function \
@@ -137,7 +137,7 @@ jobs:
               --timeout 300 \
               --memory-size 512 \
               --description "Sevvy Cloudflare monitoring function for dev environment" \
-              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api-dev.sevvyai.com,MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1,SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/454953019043/sevvy-agent-analysis-queue}"
+              --environment Variables="{MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1,SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/454953019043/sevvy-agent-analysis-queue}"
           fi
 
       - name: Deploy Vercel Lambda Function
@@ -154,7 +154,7 @@ jobs:
               --function-name $FUNCTION_NAME \
               --handler vercel.handler \
               --runtime nodejs20.x \
-              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api-dev.sevvyai.com,MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1,VERCEL_LOGS_S3_BUCKET=sevvy-dev,SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/454953019043/sevvy-agent-analysis-queue}"
+              --environment Variables="{MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1,VERCEL_LOGS_S3_BUCKET=sevvy-dev,SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/454953019043/sevvy-agent-analysis-queue}"
           else
             echo "Function does not exist, creating new function..."
             aws lambda create-function \
@@ -166,7 +166,7 @@ jobs:
               --timeout 300 \
               --memory-size 512 \
               --description "Sevvy Vercel monitoring function for dev environment" \
-              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api-dev.sevvyai.com,MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1,VERCEL_LOGS_S3_BUCKET=sevvy-dev,SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/454953019043/sevvy-agent-analysis-queue}"
+              --environment Variables="{MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1,VERCEL_LOGS_S3_BUCKET=sevvy-dev,SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/454953019043/sevvy-agent-analysis-queue}"
           fi
 
   deploy_prod:
@@ -203,7 +203,7 @@ jobs:
               --function-name $FUNCTION_NAME \
               --handler cloudwatch.handler \
               --runtime nodejs20.x \
-              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api.sevvyai.com,SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/390240928083/sevvy-agent-analysis-queue}"
+              --environment Variables="{SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/390240928083/sevvy-agent-analysis-queue}"
           else
             echo "Function does not exist, creating new function..."
             aws lambda create-function \
@@ -215,7 +215,7 @@ jobs:
               --timeout 300 \
               --memory-size 512 \
               --description "Sevvy CloudWatch monitoring function for prod environment" \
-              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api.sevvyai.com,SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/390240928083/sevvy-agent-analysis-queue}"
+              --environment Variables="{SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/390240928083/sevvy-agent-analysis-queue}"
           fi
 
       - name: Deploy Cloudflare Lambda Function
@@ -232,7 +232,7 @@ jobs:
               --function-name $FUNCTION_NAME \
               --handler cloudflare.handler \
               --runtime nodejs20.x \
-              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api.sevvyai.com,MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1,SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/390240928083/sevvy-agent-analysis-queue}"
+              --environment Variables="{MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1,SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/390240928083/sevvy-agent-analysis-queue}"
           else
             echo "Function does not exist, creating new function..."
             aws lambda create-function \
@@ -244,7 +244,7 @@ jobs:
               --timeout 300 \
               --memory-size 512 \
               --description "Sevvy Cloudflare monitoring function for prod environment" \
-              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api.sevvyai.com,MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1,SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/390240928083/sevvy-agent-analysis-queue}"
+              --environment Variables="{MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1,SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/390240928083/sevvy-agent-analysis-queue}"
           fi
 
       - name: Deploy Vercel Lambda Function
@@ -261,7 +261,7 @@ jobs:
               --function-name $FUNCTION_NAME \
               --handler vercel.handler \
               --runtime nodejs20.x \
-              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api.sevvyai.com,MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1,VERCEL_LOGS_S3_BUCKET=sevvy-prod,SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/390240928083/sevvy-agent-analysis-queue}"
+              --environment Variables="{MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1,VERCEL_LOGS_S3_BUCKET=sevvy-prod,SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/390240928083/sevvy-agent-analysis-queue}"
           else
             echo "Function does not exist, creating new function..."
             aws lambda create-function \
@@ -273,5 +273,5 @@ jobs:
               --timeout 300 \
               --memory-size 512 \
               --description "Sevvy Vercel monitoring function for prod environment" \
-              --environment Variables="{SEVVY_SERVER_BASE_URL=https://api.sevvyai.com,MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1,VERCEL_LOGS_S3_BUCKET=sevvy-prod,SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/390240928083/sevvy-agent-analysis-queue}"
+              --environment Variables="{MAX_MINUTES_PER_RUN=120,SAFETY_MINUTES=1,VERCEL_LOGS_S3_BUCKET=sevvy-prod,SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/390240928083/sevvy-agent-analysis-queue}"
           fi
