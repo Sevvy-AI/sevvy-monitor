@@ -19,7 +19,7 @@ export function detectErrorsInLogs(
   logs: LogEvent[],
   customPatterns: RegExp[] = []
 ): RawLogErrorDetectionResult & { errorTimestamp?: number } {
-  console.log(`Running error detection on ${logs.length} log events`);
+  console.log(`Running monitoring check on ${logs.length} log events`);
   for (const log of logs) {
     const detection = detectErrorInMessage(log.message, customPatterns);
     if (detection.hasError) {

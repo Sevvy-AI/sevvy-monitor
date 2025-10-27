@@ -86,7 +86,7 @@ export const handler = async (
     }
 
     console.log(
-      `Starting error detection for Cloudflare account: ${monitoringEvent.cloudflareAccountId} and worker: ${monitoringEvent.workerScriptName}`
+      `Starting monitoring for Cloudflare account: ${monitoringEvent.cloudflareAccountId} and worker: ${monitoringEvent.workerScriptName}`
     );
     const result = await monitorCloudflareLogs(monitoringEvent, {
       region: process.env.AWS_REGION || "us-east-1",
@@ -94,7 +94,7 @@ export const handler = async (
 
     if (result.errorDetectionResult.hasError) {
       console.log(
-        "Error found! Enqueuing message for Cloudflare account: " +
+        "Alert needed! Enqueuing message for Cloudflare account: " +
           monitoringEvent.cloudflareAccountId +
           " and worker: " +
           monitoringEvent.workerScriptName
@@ -105,7 +105,7 @@ export const handler = async (
         console.warn("Failed to enqueue message, but continuing with response");
       }
     } else {
-      console.log("No alert needed - no errors found");
+      console.log("No alert needed");
     }
 
     if ("httpMethod" in event) {

@@ -84,7 +84,7 @@ export const handler = async (
     }
 
     console.log(
-      `Starting error detection for AWS account: ${monitoringEvent.awsAccountNumber} and log group: ${monitoringEvent.logGroupName}`
+      `Starting monitoring for AWS account: ${monitoringEvent.awsAccountNumber} and log group: ${monitoringEvent.logGroupName}`
     );
     const result = await monitorCloudWatchLogs(monitoringEvent, {
       region: process.env.AWS_REGION || "us-east-1",
@@ -93,7 +93,7 @@ export const handler = async (
 
     if (result.errorDetectionResult.hasError) {
       console.log(
-        "Error found! Enqueuing message for AWS account: " +
+        "Alert needed! Enqueuing message for AWS account: " +
           monitoringEvent.awsAccountNumber +
           " and log group: " +
           monitoringEvent.logGroupName
@@ -104,7 +104,7 @@ export const handler = async (
         console.warn("Failed to enqueue message, but continuing with response");
       }
     } else {
-      console.log("No alert needed - no errors found");
+      console.log("No alert needed - no alerts found");
     }
 
     if ("httpMethod" in event) {

@@ -88,7 +88,7 @@ export const handler = async (
     }
 
     console.log(
-      `Starting error detection for Vercel project: ${monitoringEvent.projectName} in org: ${monitoringEvent.orgId}`
+      `Starting monitoring for Vercel project: ${monitoringEvent.projectName} in org: ${monitoringEvent.orgId}`
     );
     const result = await monitorVercelLogs(monitoringEvent, {
       region: process.env.AWS_REGION || "us-east-1",
@@ -96,7 +96,7 @@ export const handler = async (
 
     if (result.errorDetectionResult.hasError) {
       console.log(
-        "Error found! Enqueuing message for Vercel project: " +
+        "Alert needed! Enqueuing message for Vercel project: " +
           monitoringEvent.projectName
       );
       const queueClient = new SqsQueueClient();
@@ -105,7 +105,7 @@ export const handler = async (
         console.warn("Failed to enqueue message, but continuing with response");
       }
     } else {
-      console.log("No alert needed - no errors found");
+      console.log("No alert needed");
     }
 
     if ("httpMethod" in event) {

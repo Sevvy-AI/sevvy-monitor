@@ -54,7 +54,7 @@ export async function monitorCloudWatchLogs(
     await updateLastReadTime(event.orgId, event.resourceId, timestampToSave);
 
     console.log(
-      `Monitoring completed: ${logs.length} events processed, ${errorDetectionResult.hasError ? "errors" : "no errors"} found`
+      `Monitoring completed: ${logs.length} events processed, ${errorDetectionResult.hasError ? "alerts" : "no alerts"} needed`
     );
 
     const result: LogAgentInput = {
