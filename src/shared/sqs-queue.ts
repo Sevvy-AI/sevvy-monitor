@@ -26,7 +26,7 @@ export class SqsQueueClient {
 
   async sendAlert(payload: LogAgentInput): Promise<boolean> {
     if (!payload.errorDetectionResult.hasError) {
-      console.log("No errors detected, not enqueuing message.");
+      console.log("No alerts needed, not enqueuing message.");
       return true;
     }
 

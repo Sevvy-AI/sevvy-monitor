@@ -350,7 +350,7 @@ export async function monitorVercelLogs(
     );
 
     console.log(
-      `Monitoring completed: ${allLogs.length} events processed across ${minutesToRead.length} minutes, ${finalErrorDetectionResult.hasError ? "errors" : "no errors"} found`
+      `Monitoring completed: ${allLogs.length} events processed across ${minutesToRead.length} minutes, ${finalErrorDetectionResult.hasError ? "alerts" : "no alerts"} needed`
     );
 
     let timeRangeStart: number;
