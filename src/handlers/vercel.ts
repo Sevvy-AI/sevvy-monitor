@@ -4,7 +4,7 @@ import type {
   Context,
 } from "aws-lambda";
 import { monitorVercelLogs } from "../integrations/vercel/monitor.js";
-import { AlertApiClient } from "@/shared/send-alert.js";
+import { SqsQueueClient } from "@/shared/sqs-queue.js";
 import { validateVercelMonitoringEvent } from "@/integrations/vercel/utils.js";
 import { VercelMonitoringEvent, LogAgentInput } from "@/shared/types.js";
 
@@ -96,13 +96,13 @@ export const handler = async (
 
     if (result.errorDetectionResult.hasError) {
       console.log(
-        "Error found! Sending alert for Vercel project: " +
+        "Error found! Enqueuing message for Vercel project: " +
           monitoringEvent.projectName
       );
-      const alertClient = new AlertApiClient();
-      const alertSent = await alertClient.sendAlert(result);
-      if (!alertSent) {
-        console.warn("Failed to send alert, but continuing with response");
+      const queueClient = new SqsQueueClient();
+      const messageSent = await queueClient.sendAlert(result);
+      if (!messageSent) {
+        console.warn("Failed to enqueue message, but continuing with response");
       }
     } else {
       console.log("No alert needed - no errors found");
