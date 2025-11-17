@@ -46,7 +46,7 @@ export class SqsQueueClient {
       };
 
       console.log("Enqueuing message to:", this.queueUrl);
-      console.log("Queue message:", JSON.stringify(queueMessage, null, 2));
+      console.log("Queue message:", JSON.stringify({ payload: queueMessage.payload }, null, 2));
 
       const command = new SendMessageCommand({
         QueueUrl: this.queueUrl,
