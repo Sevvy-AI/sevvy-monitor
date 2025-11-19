@@ -30,15 +30,23 @@ export class DynamoDBService {
 
       if (response.Item && response.Item.LastReadTime) {
         const timestamp = parseInt(response.Item.LastReadTime.N || "0", 10);
-        console.log(
-          `Retrieved last read time for ${orgId}#${resourceId}: ${new Date(timestamp).toISOString()}`
-        );
-        return timestamp;
+
+        const oneHourAgo = Date.now() - 60 * 60 * 1000;
+        if (timestamp > 0 && timestamp > oneHourAgo) {
+          console.log(
+            `Retrieved last read time for ${orgId}#${resourceId}: ${new Date(timestamp).toISOString()}`
+          );
+          return timestamp;
+        } else {
+          console.log(
+            `Invalid or very old timestamp (${new Date(timestamp).toISOString()}) for ${orgId}#${resourceId}, treating as first-time monitoring`
+          );
+        }
       }
 
       const initialTime = Date.now() - 60 * 1000;
       console.log(
-        `First time monitoring ${orgId}#${resourceId} - creating initial entry with timestamp: ${new Date(initialTime).toISOString()}`
+        `First time monitoring ${orgId}#${resourceId} - starting from 1 minute ago: ${new Date(initialTime).toISOString()}`
       );
 
       await this.createInitialEntry(orgId, resourceId, initialTime);
@@ -50,7 +58,7 @@ export class DynamoDBService {
       );
       const fallbackTime = Date.now() - 60 * 1000;
       console.log(
-        `Using fallback time due to error: ${new Date(fallbackTime).toISOString()}`
+        `Using fallback time due to error (1 minute ago): ${new Date(fallbackTime).toISOString()}`
       );
       return fallbackTime;
     }

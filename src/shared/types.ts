@@ -1,4 +1,4 @@
-export type ProviderCode = "aws" | "cloudflare" | "vercel";
+export type ProviderCode = "aws" | "cloudflare" | "vercel" | "datadog";
 
 export interface CloudwatchMonitoringEvent {
   logGroupName: string;
@@ -33,10 +33,22 @@ export interface VercelMonitoringEvent {
   endTime?: number;
 }
 
+export interface DatadogMonitoringEvent {
+  secretArn: string;
+  datadogSite: string;
+  logIndex: string;
+  orgId: string;
+  groupId: string;
+  resourceId: string;
+  startTime?: number;
+  endTime?: number;
+}
+
 export type MonitoringEvent =
   | CloudwatchMonitoringEvent
   | CloudflareMonitoringEvent
-  | VercelMonitoringEvent;
+  | VercelMonitoringEvent
+  | DatadogMonitoringEvent;
 
 export interface LogEvent {
   timestamp: number;

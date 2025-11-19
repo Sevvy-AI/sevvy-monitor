@@ -30,15 +30,6 @@ export class SqsQueueClient {
       return true;
     }
 
-    console.log("SqsQueueClient.sendAlert called with payload:", {
-      providerCode: payload.providerCode,
-      orgId: payload.orgId,
-      groupId: payload.groupId,
-      resourceId: payload.resourceId,
-      metadata: payload.metadata,
-      timeRange: payload.timeRange,
-    });
-
     try {
       const queueMessage: QueueMessage = {
         eventType: EVENT_TYPE.LOG_ERROR,
@@ -46,7 +37,6 @@ export class SqsQueueClient {
       };
 
       console.log("Enqueuing message to:", this.queueUrl);
-      console.log("Queue message:", JSON.stringify({ payload: queueMessage.payload }, null, 2));
 
       const command = new SendMessageCommand({
         QueueUrl: this.queueUrl,
