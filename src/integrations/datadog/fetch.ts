@@ -216,7 +216,7 @@ export async function getLastReadTime(
     return await dynamoDBService.getLastReadTime(orgId, resourceId);
   } catch (error) {
     console.error("Error getting last read time from DynamoDB:", error);
-    return subMinutes(Date.now(), 2).getTime();
+    return subMinutes(Date.now(), 1).getTime();
   }
 }
 
