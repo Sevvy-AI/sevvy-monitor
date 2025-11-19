@@ -137,7 +137,7 @@ export async function monitorVercelLogs(
 
           if (errorDetectionResult.hasError) {
             console.log(
-              `Error detected in minute ${new Date(minuteTimestamp).toISOString()}: ${errorDetectionResult.matchedPattern}`
+              `Issue detected in minute ${new Date(minuteTimestamp).toISOString()}`
             );
             if (
               "errorTimestamp" in errorDetectionResult &&
@@ -263,7 +263,7 @@ export async function monitorVercelLogs(
 
                         if (errorDetectionResult.hasError) {
                           console.log(
-                            `Error detected during backfill in minute ${new Date(backfillMinute).toISOString()}: ${errorDetectionResult.matchedPattern}`
+                            `Issue detected in minute ${new Date(backfillMinute).toISOString()}`
                           );
                           if (
                             "errorTimestamp" in errorDetectionResult &&

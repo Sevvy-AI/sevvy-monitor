@@ -120,10 +120,10 @@ export const handler = async (
       return result;
     }
   } catch (error) {
-    console.error("Unexpected error in Vercel handler:", error);
+    console.error("Unexpected issue in Vercel handler:", error);
 
     const errorMessage =
-      error instanceof Error ? error.message : "Unknown error occurred";
+      error instanceof Error ? error.message : "Unknown issue occurred";
     const errorResponse = {
       error: "Internal server error",
       message: errorMessage,
