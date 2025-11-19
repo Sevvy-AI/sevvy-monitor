@@ -17,6 +17,10 @@ export function validateDatadogMonitoringEvent(
     return "datadogSite must be a valid URL";
   }
 
+  if (!event.logIndex || event.logIndex.trim() === "") {
+    return "logIndex is required and must be non-empty for Datadog monitoring";
+  }
+
   if (!event.orgId) {
     return "orgId is required";
   }

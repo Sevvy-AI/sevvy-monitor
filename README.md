@@ -190,6 +190,7 @@ Monitors Datadog logs via Datadog Logs API.
 {
   "secretArn": "arn:aws:secretsmanager:...",
   "datadogSite": "https://api.datadoghq.com",
+  "logIndex": "main",
   "orgId": "org-id",
   "groupId": "group-id",
   "resourceId": "resource-id",
@@ -213,6 +214,7 @@ Monitors Datadog logs via Datadog Logs API.
 # Create .env file
 DATADOG_SECRET_ARN=arn:aws:secretsmanager:us-east-1:...
 DATADOG_SITE=https://api.datadoghq.com
+DATADOG_LOG_INDEX=main
 TEST_ORG_ID=your-org-id
 TEST_GROUP_ID=your-group-id
 TEST_RESOURCE_ID=your-resource-id

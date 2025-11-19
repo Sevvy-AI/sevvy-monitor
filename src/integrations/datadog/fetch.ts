@@ -16,6 +16,7 @@ export interface DatadogCredentials {
 export interface DatadogFetchOptions {
   secretArn: string;
   datadogSite: string;
+  logIndex: string;
   minuteTimestamp: number;
 }
 
@@ -92,7 +93,7 @@ export async function getDatadogCredentials(
 export async function fetchDatadogLogsForMinute(
   options: DatadogFetchOptions
 ): Promise<LogEvent[]> {
-  const { secretArn, datadogSite, minuteTimestamp } = options;
+  const { secretArn, datadogSite, logIndex, minuteTimestamp } = options;
 
   console.log(
     `Fetching Datadog logs for minute: ${new Date(minuteTimestamp).toISOString()}`
@@ -117,6 +118,7 @@ export async function fetchDatadogLogsForMinute(
       const queryParams: Record<string, string> = {
         "filter[from]": startTime.toString(),
         "filter[to]": endTime.toString(),
+        "filter[query]": `index:${logIndex}`,
         "page[limit]": DATADOG_LOGS_PER_PAGE.toString(),
         sort: "timestamp",
       };

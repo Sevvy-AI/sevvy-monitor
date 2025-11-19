@@ -28,12 +28,14 @@ export async function monitorDatadogLogs(
     safetyMinutes = 1,
   } = options;
 
-  const { secretArn, datadogSite, orgId, groupId, resourceId } = event;
+  const { secretArn, datadogSite, logIndex, orgId, groupId, resourceId } =
+    event;
 
   console.log(
     `Starting Datadog monitoring for org ${orgId}, resource ${resourceId}`
   );
   console.log(`Using Datadog site: ${datadogSite}`);
+  console.log(`Monitoring log index: ${logIndex}`);
 
   try {
     let lastReadTime = event.startTime;
@@ -63,6 +65,7 @@ export async function monitorDatadogLogs(
         metadata: {
           datadogSite,
           secretArn,
+          logIndex,
         },
         timeRange: {
           startTime: lastReadTime,
@@ -97,6 +100,7 @@ export async function monitorDatadogLogs(
         const logs = await fetchDatadogLogsForMinute({
           secretArn,
           datadogSite,
+          logIndex,
           minuteTimestamp,
         });
 
@@ -176,6 +180,7 @@ export async function monitorDatadogLogs(
                 const searchResults = await fetchDatadogLogsForMinute({
                   secretArn,
                   datadogSite,
+                  logIndex,
                   minuteTimestamp: candidateTimestamp,
                 });
 
@@ -206,6 +211,7 @@ export async function monitorDatadogLogs(
                       const backfillResults = await fetchDatadogLogsForMinute({
                         secretArn,
                         datadogSite,
+                        logIndex,
                         minuteTimestamp: backfillMinute,
                       });
 
@@ -340,6 +346,7 @@ export async function monitorDatadogLogs(
       metadata: {
         datadogSite,
         secretArn,
+        logIndex,
         minutesProcessed: minutesToRead.length.toString(),
       },
       timeRange: {
@@ -361,6 +368,7 @@ export async function monitorDatadogLogs(
       metadata: {
         datadogSite,
         secretArn,
+        logIndex,
       },
       timeRange: {
         startTime: event.startTime || minuteStart(Date.now() - 60000),

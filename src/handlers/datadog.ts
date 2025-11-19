@@ -69,6 +69,7 @@ export const handler = async (
           metadata: {
             datadogSite: monitoringEvent.datadogSite || "unknown",
             secretArn: monitoringEvent.secretArn || "unknown",
+            logIndex: monitoringEvent.logIndex || "unknown",
           },
           timeRange: {
             startTime: Date.now() - 60000,
@@ -142,6 +143,7 @@ export const handler = async (
         metadata: {
           datadogSite: "unknown",
           secretArn: "unknown",
+          logIndex: "unknown",
         },
         timeRange: {
           startTime: Date.now() - 60000,

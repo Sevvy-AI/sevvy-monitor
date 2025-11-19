@@ -5,11 +5,14 @@ config();
 
 const testEvent = {
   secretArn:
+    process.env.DATADOG_SECRET_ARN ||
     "arn:aws:secretsmanager:us-east-1:454953019043:secret:sevvy/datadog/org_32vrOPxMxbwRxr6L01C2MvkNEby/bfa999b5-bfa9-73fb-965d-882c214635e8-uv8lPU",
-  datadogSite: "https://api.datadoghq.com",
-  orgId: "org_32vrOPxMxbwRxr6L01C2MvkNEby",
-  groupId: "b1b4638d-b1b4-755e-95ed-3a694cea3921",
-  resourceId: "c4ab99b5-c4ab-700f-b8ca-12572ea95cc6",
+  datadogSite: process.env.DATADOG_SITE || "https://api.datadoghq.com",
+  logIndex: process.env.DATADOG_LOG_INDEX || "main",
+  orgId: process.env.TEST_ORG_ID || "org_32vrOPxMxbwRxr6L01C2MvkNEby",
+  groupId: process.env.TEST_GROUP_ID || "b1b4638d-b1b4-755e-95ed-3a694cea3921",
+  resourceId:
+    process.env.TEST_RESOURCE_ID || "c4ab99b5-c4ab-700f-b8ca-12572ea95cc6",
 };
 
 async function runLocally() {

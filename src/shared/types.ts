@@ -36,6 +36,7 @@ export interface VercelMonitoringEvent {
 export interface DatadogMonitoringEvent {
   secretArn: string;
   datadogSite: string;
+  logIndex: string;
   orgId: string;
   groupId: string;
   resourceId: string;
