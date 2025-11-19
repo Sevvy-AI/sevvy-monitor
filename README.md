@@ -1,52 +1,66 @@
 # Sevvy Monitor
 
-AWS Lambda functions for monitoring logs from various sources at fixed intervals. Part of the Sevvy AI monitoring ecosystem.
+AWS Lambda functions for monitoring logs from various cloud providers and services. Part of the Sevvy AI monitoring ecosystem.
 
 ## Overview
 
-Sevvy Monitor is a collection of AWS Lambda functions designed to poll logs from various cloud providers and services. Each function monitors specific integration providers (CloudWatch, GCP, BQL, etc.) and can detect errors or issues using configurable regex patterns. When errors are detected, alerts are sent via a configurable API.
+Sevvy Monitor is a collection of AWS Lambda functions designed to poll logs from CloudWatch, Cloudflare, Vercel, and Datadog at regular intervals. Each function monitors specific integration providers and detects errors using configurable regex patterns. When errors are detected, alerts are sent to an SQS queue for processing.
 
 ## Architecture
 
 ```
-Lambda Function → Role Assumption → Log Fetching → Error Detection → Alert API
-     ↓                ↓                 ↓              ↓             ↓
-Environment      AWS STS         CloudWatch Logs   Regex Patterns  Stubbed API
-Variables                        (1-min chunks)
+EventBridge (1-min trigger) → Lambda Handler → Parameter Validation
+                                    ↓
+                              Log Fetching (API/S3)
+                                    ↓
+                              Error Detection (Regex Patterns)
+                                    ↓
+                              SQS Alert Queue
+                                    ↓
+                              DynamoDB (State Tracking)
 ```
 
 ## Features
 
-- **Multi-provider support**: Extensible architecture for different log sources
-- **CloudWatch integration**: Role assumption for cross-account log access
+- **Multi-provider support**: CloudWatch, Cloudflare, Vercel, and Datadog integrations
+- **Minute-by-minute monitoring**: Processes logs in 1-minute intervals
+- **DynamoDB state tracking**: Persists last read timestamps to avoid duplication
 - **Error detection**: Configurable regex patterns for error identification
-- **Time-based chunking**: Processes logs in configurable intervals (default: 1 minute)
-- **Alert system**: Configurable API integration for error notifications
+- **Pagination support**: Handles large log volumes efficiently
+- **Backfill logic**: Recovers from delayed/missing logs automatically
+- **SQS alerting**: Sends detected errors to queue for downstream processing
 - **TypeScript**: Fully typed codebase with comprehensive error handling
 
 ## Project Structure
 
 ```
 src/
-├── handlers/           # Lambda function handlers
-│   └── cloudwatch.ts   # CloudWatch monitoring handler
-├── integrations/       # Provider-specific integrations
-│   └── cloudwatch/     # CloudWatch integration
-├── shared/             # Shared utilities
-│   ├── aws-utils.ts    # AWS SDK utilities
-│   ├── error-patterns.ts # Error detection patterns
-│   └── alert-api.ts    # Alert API client (stubbed)
-└── types/              # TypeScript type definitions
+├── handlers/              # Lambda function handlers
+│   ├── cloudwatch.ts      # AWS CloudWatch monitoring
+│   ├── cloudflare.ts      # Cloudflare Workers monitoring
+│   ├── vercel.ts          # Vercel deployments monitoring
+│   └── datadog.ts         # Datadog logs monitoring
+├── integrations/          # Provider-specific integrations
+│   ├── cloudwatch/        # CloudWatch integration (role assumption)
+│   ├── cloudflare/        # Cloudflare integration (S3-based)
+│   ├── vercel/            # Vercel integration (S3-based)
+│   └── datadog/           # Datadog integration (API-based)
+├── shared/                # Shared utilities
+│   ├── dynamodb.ts        # DynamoDB state management
+│   ├── sqs-queue.ts       # SQS alert queue client
+│   ├── error-detector.ts  # Error detection patterns
+│   └── error-patterns.ts  # Default error regex patterns
+└── types/                 # TypeScript type definitions
 ```
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - npm
 - AWS CLI configured (for deployment)
-- GitHub CLI (for repository management)
+- GitHub CLI (for automated deployments)
 
 ### Installation
 
@@ -55,80 +69,209 @@ cd sevvy-monitor
 npm install
 ```
 
-### Development
+### Development Commands
+
+#### Build & Development
 
 ```bash
-# TypeScript compilation
-npm run build
-
-# Development server with hot reload
-npm run dev
-
-# Run tests
-npm test
-
-# Linting and formatting
-npm run lint:format:fix
+npm run build              # TypeScript compilation
+npm run build:lambda       # Build + bundle + package for Lambda
+npm run dev               # Hot reload with tsx (CloudWatch)
+npm run dev:cloudflare    # Hot reload (Cloudflare)
+npm run dev:vercel        # Hot reload (Vercel)
+npm run dev:datadog       # Hot reload (Datadog)
 ```
 
-### Lambda Deployment
+#### Testing
 
 ```bash
-# Build Lambda deployment package
-npm run build:lambda
-
-# Deploy to development environment
-npm run deploy:dev
-
-# Deploy to production environment
-npm run deploy:prod
+npm test                  # Run all tests
+npm run test:watch        # Run tests in watch mode
 ```
 
-## Usage
+#### Linting & Formatting
 
-### CloudWatch Monitoring
+```bash
+npm run lint              # Run ESLint
+npm run lint:fix          # Fix ESLint issues
+npm run format:fix        # Fix Prettier formatting
+npm run lint:format:fix   # Fix both linting and formatting
+```
 
-The CloudWatch Lambda function accepts the following parameters:
+#### Local Testing Scripts
+
+```bash
+npm run run:cloudwatch    # Test CloudWatch locally
+npm run run:cloudflare    # Test Cloudflare locally
+npm run run:vercel        # Test Vercel locally
+npm run run:datadog       # Test Datadog locally
+```
+
+## Lambda Functions
+
+### CloudWatch Handler
+
+**File**: `src/handlers/cloudwatch.ts`  
+**Handler**: `cloudwatch.handler`
+
+Monitors AWS CloudWatch Logs with cross-account role assumption.
+
+**Event Parameters**:
 
 ```typescript
 {
   "logGroupName": "/aws/lambda/my-function",
-  "awsAccountId": "123456789012",
+  "awsAccountNumber": "123456789012",
   "roleArn": "arn:aws:iam::123456789012:role/LogMonitoringRole",
-  "intervalMinutes": 1,          // Optional: defaults to 1
-  "startTime": 1640995200000,    // Optional: Unix timestamp
-  "endTime": 1640995260000       // Optional: Unix timestamp
+  "externalId": "external-id",
+  "orgId": "org-id",
+  "groupId": "group-id",
+  "resourceId": "resource-id",
+  "startTime": 1640995200000,    // Optional
+  "endTime": 1640995260000       // Optional
 }
 ```
 
-### Environment Variables
+### Cloudflare Handler
 
-Required for deployment:
+**File**: `src/handlers/cloudflare.ts`  
+**Handler**: `cloudflare.handler`
+
+Monitors Cloudflare Workers logs from S3.
+
+**Event Parameters**:
+
+```typescript
+{
+  "s3Bucket": "cloudflare-logs-bucket",
+  "s3Prefix": "logs/",
+  "cloudflareAccountId": "account-id",
+  "workerScriptName": "worker-name",
+  "orgId": "org-id",
+  "groupId": "group-id",
+  "resourceId": "resource-id",
+  "startTime": 1640995200000,    // Optional
+  "endTime": 1640995260000       // Optional
+}
+```
+
+### Vercel Handler
+
+**File**: `src/handlers/vercel.ts`  
+**Handler**: `vercel.handler`
+
+Monitors Vercel deployment logs from S3.
+
+**Event Parameters**:
+
+```typescript
+{
+  "projectName": "my-project",
+  "orgId": "org-id",
+  "groupId": "group-id",
+  "resourceId": "resource-id",
+  "startTime": 1640995200000,    // Optional
+  "endTime": 1640995260000       // Optional
+}
+```
+
+**Environment Variable**: `VERCEL_LOGS_S3_BUCKET`
+
+### Datadog Handler
+
+**File**: `src/handlers/datadog.ts`  
+**Handler**: `datadog.handler`
+
+Monitors Datadog logs via Datadog Logs API.
+
+**Event Parameters**:
+
+```typescript
+{
+  "secretArn": "arn:aws:secretsmanager:...",
+  "datadogSite": "https://api.datadoghq.com",
+  "orgId": "org-id",
+  "groupId": "group-id",
+  "resourceId": "resource-id",
+  "startTime": 1640995200000,    // Optional
+  "endTime": 1640995260000       // Optional
+}
+```
+
+**Secrets Manager Secret Structure**:
+
+```json
+{
+  "apiKey": "dd_api_key_value",
+  "appKey": "dd_app_key_value"
+}
+```
+
+**Local Testing**:
 
 ```bash
-AWS_REGION=us-east-1           # AWS region
-ALERT_API_URL=https://...      # Alert API endpoint (optional)
-ALERT_API_KEY=your-api-key     # Alert API authentication (optional)
+# Create .env file
+DATADOG_SECRET_ARN=arn:aws:secretsmanager:us-east-1:...
+DATADOG_SITE=https://api.datadoghq.com
+TEST_ORG_ID=your-org-id
+TEST_GROUP_ID=your-group-id
+TEST_RESOURCE_ID=your-resource-id
+
+# Run locally
+npm run run:datadog
+```
+
+## Environment Variables
+
+### Required for All Lambdas
+
+```bash
+AWS_REGION=us-east-1                    # AWS region
+SQS_QUEUE_URL=https://sqs...            # SQS alert queue URL
+```
+
+### Optional Configuration
+
+```bash
+MAX_MINUTES_PER_RUN=120                 # Max minutes per invocation (default: 120)
+SAFETY_MINUTES=1                        # Safety buffer (default: 1)
+```
+
+### Vercel-Specific
+
+```bash
+VERCEL_LOGS_S3_BUCKET=sevvy-logs        # S3 bucket for Vercel logs
 ```
 
 ## Error Detection
 
-The system includes built-in error patterns:
+The system includes built-in error patterns in `src/shared/error-detector.ts`:
 
-- **Generic Error**: `error`, `ERROR`, `Error`
+- **Generic Error**: `error`, `ERROR`, `Error` (excluding URLs/paths)
 - **Exception**: `exception`, `Exception`, `EXCEPTION`
 - **Failed**: `failed`, `Failed`, `FAILED`, `failure`
-- **Timeout**: `timeout`, `timed out`
-- **Connection Error**: `connection error`, `connection failed`
-- **HTTP Error**: `404`, `500`, `bad request`, etc.
-- **Database Error**: `database error`, `sql error`
-- **AWS Error**: `AccessDenied`, `ThrottlingException`
+- **Timeout**: `timeout`, `timed out`, `TIMEOUT`
+- **Connection Error**: `connection error/failed/refused`
+- **HTTP Error**: `4xx`, `5xx`, status codes
+- **Database Error**: `database error`, `sql/query failed`
+- **AWS Error**: `AccessDenied`, `ThrottlingException`, `ServiceUnavailable`
 
-Custom patterns can be added by extending the `ErrorPattern[]` configuration.
+Custom patterns can be added per integration by extending the `customErrorPatterns` parameter.
 
 ## State Management
 
-The current implementation uses a simple time-based approach for tracking the last read time. This is stubbed out in `log-fetcher.ts` and can be replaced with persistent storage (DynamoDB, Parameter Store, etc.) in future iterations.
+State tracking is implemented using **DynamoDB** (`src/shared/dynamodb.ts`):
+
+- **Table**: `ResourceMonitoring`
+- **Keys**: `orgId` (partition key), `resourceId` (sort key)
+- **Attributes**: `LastReadTime` (timestamp), `UpdatedAt` (timestamp)
+
+Each Lambda maintains its progress by:
+
+1. Reading `LastReadTime` from DynamoDB at start
+2. Processing logs minute-by-minute
+3. Updating `LastReadTime` after each successful minute
+4. Resuming from last successful timestamp on next invocation
 
 ## Testing
 
@@ -149,39 +292,124 @@ Tests cover:
 
 ## Deployment
 
+### GitHub Actions CI/CD
+
+Automated deployment via `.github/workflows/deploy.yml`:
+
+- **On Pull Request**: Deploys to non-prod environment
+- **On Main Branch**: Deploys to prod environment
+- **Steps**: Test → Lint → Build → Bundle → Deploy
+
+All Lambda functions are deployed from a single `deployment.zip` package.
+
 ### AWS Lambda Configuration
 
-Recommended Lambda settings:
+Recommended settings for all handlers:
 
-- **Runtime**: Node.js 18
-- **Memory**: 256 MB
-- **Timeout**: 30 seconds
+- **Runtime**: Node.js 20
+- **Memory**: 512 MB
+- **Timeout**: 300 seconds (5 minutes)
 - **Architecture**: x86_64
 
 ### IAM Permissions
 
-The Lambda function needs:
+**Lambda Execution Role** needs:
 
-- `sts:AssumeRole` - For cross-account access
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["sts:AssumeRole"],
+      "Resource": "arn:aws:iam::*:role/LogMonitoringRole*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:*:*:*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:ListBucket"],
+      "Resource": ["arn:aws:s3:::log-buckets/*", "arn:aws:s3:::log-buckets"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["dynamodb:GetItem", "dynamodb:PutItem"],
+      "Resource": "arn:aws:dynamodb:*:*:table/ResourceMonitoring"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["sqs:SendMessage"],
+      "Resource": "arn:aws:sqs:*:*:sevvy-agent-analysis-queue"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["secretsmanager:GetSecretValue"],
+      "Resource": "arn:aws:secretsmanager:*:*:secret:sevvy/*"
+    }
+  ]
+}
+```
+
+**Cross-Account Roles** (for CloudWatch) need:
+
 - `logs:FilterLogEvents` - For reading CloudWatch logs
-
-The assumed role in target accounts needs:
-
-- `logs:FilterLogEvents` - For the specific log groups
 - `logs:DescribeLogGroups` - For log group metadata
+
+## TypeScript Configuration
+
+### Strict Typing
+
+- **Zero `any` types** - All interfaces explicitly defined
+- **Comprehensive error handling** - Type-safe error casting
+- **AWS SDK types** - Proper typing for all AWS service interactions
+- **Lambda types** - Full typing for event handling and responses
+
+### Module System
+
+- **ES Modules** - Uses `"type": "module"` in package.json
+- **Import Extensions** - All imports use `.js` extensions for compiled output
+- **Path Aliases** - `@/*` aliases configured for cleaner imports
+
+### Build System
+
+- **TypeScript Compilation**: `tsc` compiles to `dist/` directory
+- **esbuild Bundling**: Creates optimized single-file bundles per handler
+- **External Dependencies**: AWS SDK marked as external (provided by Lambda runtime)
+- **Minification**: Enabled for production builds
+- **ZIP Packaging**: Automated deployment package creation
+
+## Adding New Integration Providers
+
+1. Create new directory under `src/integrations/<provider>/`
+2. Implement provider-specific log fetching in `fetch.ts`
+3. Implement monitoring orchestration in `monitor.ts`
+4. Create validation utilities in `utils.ts`
+5. Create new Lambda handler in `src/handlers/<provider>.ts`
+6. Update `src/shared/types.ts` with new event interfaces
+7. Add bundling script to `package.json`
+8. Update `.github/workflows/deploy.yml` with deployment steps
 
 ## Contributing
 
-1. Follow existing TypeScript patterns
-2. Add tests for new functionality
-3. Run linting before committing: `npm run lint:format:fix`
-4. Update documentation for API changes
+1. Follow existing TypeScript patterns and file structures
+2. Match naming conventions from existing integrations
+3. Add tests for new functionality in `tests/`
+4. Run linting before committing: `npm run lint:format:fix`
+5. Update this README for API/feature changes
+6. Test locally before submitting PR
 
 ## Future Enhancements
 
-- [ ] Persistent state management for last read time tracking
-- [ ] Additional integration providers (GCP, BQL)
-- [ ] Advanced error pattern configuration via environment
+- [ ] Additional integration providers (GCP, Azure Monitor)
+- [ ] Alert deduplication based on pattern + time window
+- [ ] Alert severity levels based on error pattern types
 - [ ] Metrics and monitoring dashboard
-- [ ] Alert deduplication and throttling
-- [ ] Webhook support for alert delivery
+- [ ] Alert throttling to prevent spam
+- [ ] Multiple alert channels (Slack, email, PagerDuty)
